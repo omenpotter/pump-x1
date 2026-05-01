@@ -11,12 +11,16 @@ export default function OrbCanvas() {
       THREE = (await import("three")).default || await import("three");
 
       const canvas = ref.current!;
+      // Wait one rAF so the browser has done layout and clientWidth/Height are non-zero
+      await new Promise<void>(r => requestAnimationFrame(() => r()));
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
       camera.position.z = 3.6;
       const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
       renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      const W = canvas.clientWidth || 520;
+      const H = canvas.clientHeight || 520;
+      renderer.setSize(W, H, false);
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.5;
 

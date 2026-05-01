@@ -1,15 +1,18 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+
+const PUMP_CA = "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C";
+const PRICE_URL = `https://api.xdex.xyz/api/token-price/price?network=X1%20Mainnet&address=${PUMP_CA}`;
 
 type Candle = { o: number; h: number; l: number; c: number; vol: number };
 type TF = "1m" | "5m" | "1h" | "1d";
 
-function genData(n: number): Candle[] {
-  const data: Candle[] = []; let p = 100;
+function genData(n: number, base: number): Candle[] {
+  const data: Candle[] = []; let p = base;
   for (let i = n; i >= 0; i--) {
     const v = (Math.random() - .45) * .065; const o = p; const c = o * (1 + v);
-    const h = Math.max(o, c) * (1 + Math.random() * .025); const l = Math.min(o, c) * (1 - Math.random() * .025);
-    data.push({ o, h, l, c, vol: Math.random() * 900 + 200 }); p = c;
+    data.push({ o, h: Math.max(o, c) * (1 + Math.random() * .025), l: Math.min(o, c) * (1 - Math.random() * .025), c, vol: Math.random() * 900 + 200 });
+    p = c;
   }
   return data;
 }
@@ -18,19 +21,59 @@ export default function Chart() {
   const ref = useRef<HTMLCanvasElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const [tf, setTf] = useState<TF>("1m");
-  const [price, setPrice] = useState("—");
-  const [change, setChange] = useState("PUMP/XN");
+  const [displayPrice, setDisplayPrice] = useState("—");
+  const [change, setChange] = useState("—");
   const [changePos, setChangePos] = useState(true);
-  const allData = useRef({ "1m": genData(60), "5m": genData(60), "1h": genData(60), "1d": genData(60) });
+  const [livePrice, setLivePrice] = useState<number | null>(null);
+  const [isLive, setIsLive] = useState(false);
+  const allData = useRef<Record<TF, Candle[]>>({ "1m": [], "5m": [], "1h": [], "1d": [] });
+  const livePriceRef = useRef<number | null>(null);
+  livePriceRef.current = livePrice;
+  const tfRef = useRef(tf);
+  tfRef.current = tf;
 
-  const draw = () => {
+  const fetchPrice = useCallback(async () => {
+    try {
+      const res = await fetch(PRICE_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error("bad response");
+      const json = await res.json();
+      const price = json?.price ?? json?.data?.price ?? json?.data ?? null;
+      const num = typeof price === "number" ? price : parseFloat(price);
+      if (num > 0) {
+        setLivePrice(num);
+        setIsLive(true);
+        return num;
+      }
+    } catch {
+      setIsLive(false);
+    }
+    return null;
+  }, []);
+
+  const initData = useCallback((base: number) => {
+    allData.current = {
+      "1m": genData(60, base),
+      "5m": genData(60, base),
+      "1h": genData(60, base),
+      "1d": genData(60, base),
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchPrice().then(price => initData(price ?? 0.001));
+    const iv = setInterval(fetchPrice, 30_000);
+    return () => clearInterval(iv);
+  }, [fetchPrice, initData]);
+
+  const draw = useCallback(() => {
     const cvs = ref.current; const box = boxRef.current;
     if (!cvs || !box) return;
+    const data = allData.current[tfRef.current];
+    if (!data || data.length === 0) return;
     cvs.width = box.clientWidth; cvs.height = box.clientHeight;
     const W = cvs.width, H = cvs.height;
     const ctx = cvs.getContext("2d")!;
     ctx.clearRect(0, 0, W, H);
-    const data = allData.current[tf];
     ctx.strokeStyle = "rgba(0,120,200,0.06)"; ctx.lineWidth = 1;
     for (let i = 0; i <= 5; i++) { const y = H * i / 5; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
     for (let i = 0; i <= 7; i++) { const x = W * i / 7; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
@@ -55,23 +98,34 @@ export default function Chart() {
     ctx.strokeStyle = "rgba(0,150,255,.4)"; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
     ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = "rgba(0,170,255,.5)"; ctx.font = "9px DM Mono,monospace";
-    for (let i = 0; i <= 4; i++) { const p = mn + (mx - mn) * i / 4; ctx.fillText(p.toFixed(2), 3, cH * (mx - p) / rng + 4); }
+    for (let i = 0; i <= 4; i++) { const p = mn + (mx - mn) * i / 4; ctx.fillText(p.toFixed(6), 3, cH * (mx - p) / rng + 4); }
     const chg = ((ld.c - pd.c) / pd.c * 100).toFixed(2);
-    setPrice(ld.c.toFixed(4)); setChange((Number(chg) > 0 ? "+" : "") + chg + "%"); setChangePos(Number(chg) >= 0);
-  };
+    const live = livePriceRef.current;
+    const shown = live !== null
+      ? (live < 0.0001 ? live.toFixed(8) : live < 0.01 ? live.toFixed(6) : live.toFixed(4))
+      : ld.c.toFixed(6);
+    setDisplayPrice(shown);
+    setChange((Number(chg) > 0 ? "+" : "") + chg + "%");
+    setChangePos(Number(chg) >= 0);
+  }, []);
 
-  useEffect(() => { draw(); }, [tf]);
   useEffect(() => {
+    if (allData.current["1m"].length === 0) return;
+    draw();
+    window.addEventListener("resize", draw);
     const iv = setInterval(() => {
       (Object.values(allData.current) as Candle[][]).forEach(d => {
-        const l = d[d.length - 1]; const v = (Math.random() - .48) * .018; const nc = l.c * (1 + v);
+        const l = d[d.length - 1];
+        const live = livePriceRef.current;
+        const drift = live !== null ? (live - l.c) * 0.05 : 0;
+        const v = (Math.random() - .48) * .018;
+        const nc = Math.max(l.c * (1 + v) + drift, 0.000001);
         l.c = nc; l.h = Math.max(l.h, nc); l.l = Math.min(l.l, nc); l.vol += Math.random() * 8;
       });
       draw();
     }, 1100);
-    window.addEventListener("resize", draw);
     return () => { clearInterval(iv); window.removeEventListener("resize", draw); };
-  }, [tf]);
+  }, [tf, draw, livePrice]);
 
   const tfs: TF[] = ["1m", "5m", "1h", "1d"];
   return (
@@ -80,10 +134,15 @@ export default function Chart() {
       <div style={{ padding: "18px 22px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "1.7rem", color: "#fff", display: "flex", alignItems: "center", gap: 10 }}>
-            {price}
+            {displayPrice}
             <span style={{ fontSize: ".78rem", padding: "3px 10px", background: changePos ? "rgba(0,170,255,.1)" : "rgba(255,60,60,.12)", color: changePos ? "var(--blue)" : "#ff4444", fontFamily: "var(--font-mono)", letterSpacing: ".05em" }}>{change}</span>
           </div>
-          <div style={{ fontSize: ".68rem", color: "var(--text-dim)", marginTop: 4, fontFamily: "var(--font-mono)" }}>Pumps1...Szb2C</div>
+          <div style={{ fontSize: ".68rem", color: "var(--text-dim)", marginTop: 4, fontFamily: "var(--font-mono)", display: "flex", alignItems: "center", gap: 8 }}>
+            <span>PUMP/XNT · {PUMP_CA.slice(0, 6)}...{PUMP_CA.slice(-4)}</span>
+            <span style={{ fontSize: ".6rem", color: isLive ? "rgba(0,255,120,.55)" : "rgba(255,150,50,.45)" }}>
+              · {isLive ? "live" : "simulated"}
+            </span>
+          </div>
         </div>
         <div style={{ display: "flex", gap: 3 }}>
           {tfs.map(t => (
