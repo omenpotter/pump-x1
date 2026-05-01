@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-bebas: 'Bebas Neue', cursive;
+  --font-mono: 'DM Mono', monospace;
+  --font-syne: 'Syne', sans-serif;
+  --blue: #00aaff;
+  --cyan: #00e5ff;
+  --bg: #030609;
+  --bg2: #050d14;
+  --text: rgba(220,240,255,0.9);
+  --text-dim: rgba(160,210,255,0.5);
+  --border: rgba(0,170,255,0.15);
+  --card: rgba(4,12,22,0.85);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-syne), sans-serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* Custom cursor */
+#cur { position: fixed; width: 12px; height: 12px; background: var(--blue); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); mix-blend-mode: screen; transition: width .15s, height .15s; }
+#cur2 { position: fixed; width: 36px; height: 36px; border: 1px solid rgba(0,170,255,.5); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); opacity: .5; transition: all .1s; }
+
+/* Noise overlay */
+.noise { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .022;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* Scanlines */
+.scan { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.032) 2px, rgba(0,0,0,.032) 4px); }
+
+/* Blink dot */
+.blink-dot { width: 6px; height: 6px; background: var(--blue); border-radius: 50%; animation: blinkD 1.4s step-end infinite; flex-shrink: 0; }
+@keyframes blinkD { 0%,100% { opacity:1 } 50% { opacity:0 } }
+
+/* Ticker */
+@keyframes tickScroll { 0% { transform:translateX(0) } 100% { transform:translateX(-50%) } }
+.ticker-track { animation: tickScroll 26s linear infinite; }
+
+/* Loader */
+@keyframes ldAssemble { 0% { opacity:0; filter:blur(12px); transform:scale(.8) } 100% { opacity:1; filter:drop-shadow(0 0 30px rgba(0,170,255,.9)); transform:scale(1) } }
+@keyframes ldRing { from { transform:rotate(0deg) } to { transform:rotate(360deg) } }
+@keyframes ldBar { 0% { width:0% } 100% { width:100% } }
+@keyframes fadeUp { 0% { opacity:0; transform:translateY(8px) } 100% { opacity:1; transform:translateY(0) } }
+@keyframes floatPill { 0%,100% { transform:translateY(0) rotate(-2deg) } 50% { transform:translateY(-12px) rotate(2deg) } }
+@keyframes cmPulse {
+  0%,100% { filter: drop-shadow(0 0 24px rgba(0,170,255,.7)) drop-shadow(0 0 48px rgba(0,170,255,.3)) }
+  50% { filter: drop-shadow(0 0 36px rgba(0,170,255,1)) drop-shadow(0 0 72px rgba(0,170,255,.5)) }
+}
+@keyframes dpFloat { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-8px) } }
+@keyframes rmPulse { 0%,100% { box-shadow:0 0 0 0 rgba(0,170,255,.4) } 50% { box-shadow:0 0 0 10px rgba(0,170,255,0) } }
+
+/* Fade animations */
+.fade-up { opacity:0; transform:translateY(20px); transition:opacity .7s, transform .7s; }
+.fade-up.vis { opacity:1; transform:translateY(0); }
+.fade-left { opacity:0; transform:translateX(-20px); transition:opacity .7s, transform .7s; }
+.fade-left.vis { opacity:1; transform:translateX(0); }
+.rm-item { opacity:0; transform:translateX(-16px); transition:all .6s cubic-bezier(.16,1,.3,1); }
+.rm-item.vis { opacity:1; transform:translateX(0); }
+
+/* Clip path buttons */
+.btn-clip { clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+.card-clip { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+.ctr-clip { clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px)); }
+.soc-clip { clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+
+/* Active tf button */
+.tf-btn { padding:5px 11px; font-family:var(--font-mono); font-size:.63rem; letter-spacing:.08em; border:1px solid rgba(0,170,255,.15); color:rgba(160,210,255,.5); background:transparent; cursor:pointer; transition:all .2s; }
+.tf-btn:hover, .tf-btn.active { background:rgba(0,170,255,.1); border-color:var(--blue); color:var(--blue); }
