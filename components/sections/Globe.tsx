@@ -11,12 +11,16 @@ export default function Globe() {
       const canvas = canvasRef.current
       if (!canvas) return
 
+      // Wait one rAF so clientWidth/Height are non-zero after layout
+      await new Promise<void>(r => requestAnimationFrame(() => r()))
       const scene = new THREE.Scene()
       const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100)
       camera.position.z = 3.6
       const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-      renderer.setSize(canvas.clientWidth, canvas.clientHeight)
+      const W = canvas.clientWidth || 520
+      const H = canvas.clientHeight || 520
+      renderer.setSize(W, H, false)
       renderer.toneMapping = THREE.ACESFilmicToneMapping
       renderer.toneMappingExposure = 1.5
 

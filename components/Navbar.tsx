@@ -19,7 +19,7 @@ export default function Navbar() {
         </span>
       </Link>
       <ul style={{ display: "flex", gap: 32, listStyle: "none" }}>
-        {["market","token","roadmap","community"].map(id => (
+        {["market","token","community"].map(id => (
           <li key={id}>
             <a href={`#${id}`} style={{ fontSize: ".74rem", letterSpacing: ".18em", textTransform: "uppercase",
               color: "var(--text-dim)", textDecoration: "none", fontWeight: 600, transition: "color .25s" }}

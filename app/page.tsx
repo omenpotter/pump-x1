@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import ScrollFade from "@/components/ScrollFade";
@@ -14,6 +15,9 @@ const Navbar      = dynamic(() => import("@/components/Navbar"),          { ssr:
 
 const CA = "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C";
 const EXPLORER = `https://explorer.mainnet.x1.xyz/address/${CA}`;
+const BUY_URL = "https://app.xdex.xyz/swap?fromTokenAddress=Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C&toTokenAddress=111111111111111111111111111111111111111111&ammConfigAddress=2eFPWosizV6nSAGeSvi5tRgXLoqhjnSesra23ALA248c";
+const WEBSITE = "https://pump-x1.vercel.app/";
+const TELEGRAM = "https://t.me/+mYybY1doiaJiNjQ0";
 
 export default function Home() {
   return (
@@ -44,7 +48,7 @@ export default function Home() {
               The viral token movement of X1 Mainnet. Fixed supply. Zero inflation. Built for speed on the next-generation SVM blockchain.
             </p>
             <div style={{ display:"flex", gap:14, flexWrap:"wrap", animation:"fadeUp .5s .6s forwards", opacity:0 }}>
-              <a href={EXPLORER} target="_blank" className="btn-clip" style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"14px 30px", background:"var(--blue)", color:"#fff", fontFamily:"var(--font-syne)", fontWeight:700, fontSize:".78rem", letterSpacing:".12em", textTransform:"uppercase", textDecoration:"none", transition:"all .25s" }}>Buy PUMP ↗</a>
+              <a href={BUY_URL} target="_blank" className="btn-clip" style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"14px 30px", background:"var(--blue)", color:"#fff", fontFamily:"var(--font-syne)", fontWeight:700, fontSize:".78rem", letterSpacing:".12em", textTransform:"uppercase", textDecoration:"none", transition:"all .25s" }}>Buy PUMP ↗</a>
               <a href="#token" className="btn-clip" style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"14px 30px", border:"1px solid rgba(0,170,255,.4)", color:"var(--blue)", fontFamily:"var(--font-syne)", fontWeight:700, fontSize:".78rem", letterSpacing:".12em", textTransform:"uppercase", textDecoration:"none", transition:"all .25s", background:"transparent" }}>Token Info</a>
             </div>
             <div style={{ display:"flex", gap:36, marginTop:44, animation:"fadeUp .5s .7s forwards", opacity:0 }}>
@@ -223,39 +227,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── ROADMAP ── */}
-      <section id="roadmap" style={{ position:"relative", zIndex:2, padding:"110px 5vw", background:"var(--bg)" }}>
-        <div style={{ maxWidth:1380, margin:"0 auto" }}>
-          <ScrollFade><div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".25em", color:"var(--blue)", textTransform:"uppercase", marginBottom:12, display:"flex", alignItems:"center", gap:10 }}><span style={{ color:"rgba(0,170,255,.3)" }}>//</span>Roadmap</div></ScrollFade>
-          <ScrollFade delay={80}><h2 style={{ fontFamily:"var(--font-bebas)", fontSize:"clamp(2.5rem,5vw,4.5rem)", color:"#fff", lineHeight:1, letterSpacing:".03em", marginBottom:18 }}>THE <span style={{ color:"var(--blue)" }}>PATH AHEAD</span></h2></ScrollFade>
-          <ScrollFade delay={160}><p style={{ fontSize:"1rem", color:"var(--text-dim)", maxWidth:540, lineHeight:1.8, marginBottom:60 }}>PUMP's journey from genesis to X1 ecosystem powerhouse.</p></ScrollFade>
-          <div style={{ position:"relative", maxWidth:880 }}>
-            <div style={{ position:"absolute", left:22, top:0, bottom:0, width:1, background:"linear-gradient(180deg,var(--blue) 0%,rgba(0,170,255,.08) 100%)" }} />
-            {[
-              { phase:"Phase 01 — Complete", title:"GENESIS LAUNCH", desc:"Token-2022 contract deployed on X1 Mainnet. Fixed supply minted. Metadata committed to GitHub. Explorer verified.", tag:"✓ DEPLOYED", done:true, active:false },
-              { phase:"Phase 02 — Active", title:"LIQUIDITY EXPANSION", desc:"xDEX pool creation. Liquidity provision via x1nexus.xyz. Trading pairs. Price discovery on X1's native DEX.", tag:"⟳ IN PROGRESS", done:false, active:true },
-              { phase:"Phase 03", title:"COMMUNITY GROWTH", desc:"Telegram launch. Twitter presence. Influencer outreach. Holder incentive campaigns. Governance frameworks.", tag:"UPCOMING", done:false, active:false },
-              { phase:"Phase 04", title:"ECOSYSTEM INTEGRATIONS", desc:"CEX listings. Cross-chain bridge support. DeFi protocol integrations. X1 launchpad participation.", tag:"UPCOMING", done:false, active:false },
-              { phase:"Phase 05", title:"GAMING + AI UTILITY", desc:"PUMP integration into ARKbs Labs game ecosystem. In-game currency, NFT interoperability, AI utility on X1.", tag:"VISION", done:false, active:false },
-            ].map(({phase,title,desc,tag,done,active},i)=>(
-              <ScrollFade key={title} className="rm-item" delay={i*100}>
-                <div style={{ display:"grid", gridTemplateColumns:"56px 1fr", gap:20, paddingBottom:48 }}>
-                  <div style={{ width:14, height:14, borderRadius:"50%", border:"2px solid var(--blue)", background: active ? "var(--blue)" : "var(--bg)", position:"relative", zIndex:1, marginTop:3, animation: active ? "rmPulse 2s ease-in-out infinite" : "none", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    {done && <div style={{ width:5, height:5, background:"var(--blue)", borderRadius:"50%" }} />}
-                  </div>
-                  <div>
-                    <div style={{ fontFamily:"var(--font-mono)", fontSize:".62rem", letterSpacing:".2em", color:"var(--text-dim)", marginBottom:6, textTransform:"uppercase" }}>{phase}</div>
-                    <div style={{ fontFamily:"var(--font-bebas)", fontSize:"1.55rem", letterSpacing:".04em", color:"#fff", marginBottom:8 }}>{title}</div>
-                    <div style={{ fontSize:".9rem", color:"var(--text-dim)", lineHeight:1.7 }}>{desc}</div>
-                    <span style={{ display:"inline-block", marginTop:8, padding:"2px 10px", border:"1px solid rgba(0,170,255,.2)", fontFamily:"var(--font-mono)", fontSize:".62rem", color:"var(--blue)", letterSpacing:".06em" }}>{tag}</span>
-                  </div>
-                </div>
-              </ScrollFade>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── COMMUNITY ── */}
       <section id="community" style={{ position:"relative", zIndex:2, padding:"110px 5vw", textAlign:"center", background:"linear-gradient(135deg,rgba(5,13,22,.9) 0%,var(--bg) 100%)" }}>
         <div style={{ maxWidth:780, margin:"0 auto" }}>
@@ -267,8 +238,8 @@ export default function Home() {
           <ScrollFade delay={80}><h2 style={{ fontFamily:"var(--font-bebas)", fontSize:"clamp(3rem,7vw,6rem)", color:"#fff", letterSpacing:".04em", marginBottom:18, background:"linear-gradient(135deg,#fff 20%,var(--blue))", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>JOIN THE<br/>MOVEMENT</h2></ScrollFade>
           <ScrollFade delay={160}><p style={{ fontSize:"1rem", color:"var(--text-dim)", lineHeight:1.8, marginBottom:48 }}>PUMP is nothing without the people behind it. Join the growing community of X1 believers.</p></ScrollFade>
           <ScrollFade delay={240}>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14 }}>
-              {[{icon:"✕",label:"Twitter / X",href:"https://twitter.com"},{icon:"✈",label:"Telegram",href:"https://t.me"},{icon:"⌥",label:"GitHub",href:"https://github.com/second2none-1/Pump"},{icon:"◉",label:"Explorer",href:EXPLORER}].map(({icon,label,href})=>(
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14, maxWidth:540, margin:"0 auto" }}>
+              {[{icon:"✈",label:"Telegram",href:TELEGRAM},{icon:"◎",label:"Website",href:WEBSITE},{icon:"◉",label:"Explorer",href:EXPLORER}].map(({icon,label,href})=>(
                 <a key={label} href={href} target="_blank" className="soc-clip soc-c" style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:10, padding:"24px 16px", background:"var(--card)", border:"1px solid var(--border)", textDecoration:"none", color:"inherit", transition:"all .3s" }}>
                   <div style={{ fontSize:"1.5rem" }}>{icon}</div>
                   <div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".14em", color:"var(--text-dim)", textTransform:"uppercase" }}>{label}</div>
@@ -298,10 +269,18 @@ export default function Home() {
 
 function CopyBtn({ ca }: { ca: string }) {
   "use client";
+  const [copied, setCopied] = useState(false);
   return (
-    <button onClick={() => { if (typeof navigator !== "undefined") navigator.clipboard.writeText(ca).then(() => {}); }}
-      style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 18px", border:"1px solid rgba(0,170,255,.3)", color:"var(--blue)", fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".1em", background:"transparent", cursor:"pointer" }}>
-      ⎘ Copy Address
+    <button onClick={() => {
+      if (typeof navigator !== "undefined") {
+        navigator.clipboard.writeText(ca).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
+      }
+    }}
+      style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 18px", border:"1px solid rgba(0,170,255,.3)", color: copied ? "#00ffaa" : "var(--blue)", fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".1em", background: copied ? "rgba(0,255,170,.06)" : "transparent", cursor:"pointer", transition:"all .2s" }}>
+      {copied ? "✓ Copied!" : "⎘ Copy Address"}
     </button>
   );
 }
