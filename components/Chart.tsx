@@ -1,238 +1,318 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
 
+// ── Constants ──────────────────────────────────────────────────────────────
 const PUMP_CA  = "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C";
 const XNT_CA   = "XNMbEwZFFBKQhqyW3taa8cAUp1xBUHfyzRFJQvZET4m";
-const API_BASE = "https://api.xdex.xyz";
+const X1_RPC   = "https://rpc.mainnet.x1.xyz/";
+const XDEX_API = "https://api.xdex.xyz";
 const NETWORK  = "X1%20Mainnet";
 
-const PRICE_URL  = `${API_BASE}/api/token-price/price?network=${NETWORK}&address=${PUMP_CA}`;
-const POOL_URL   = `${API_BASE}/api/xendex/pool/tokens/${PUMP_CA}/${XNT_CA}?network=${NETWORK}`;
+type TF = 1 | 5 | 15 | 60 | 240 | 1440;
+type Trade = { time: number; xnt: number; tok: number; price: number; side: "BUY" | "SELL"; sig: string };
+type OHLCV = { o: number; h: number; l: number; c: number; v: number; active: boolean };
 
-type Candle = { o: number; h: number; l: number; c: number; vol: number };
-type TF = "1m" | "5m" | "1h" | "1d";
-
-function genHistory(n: number, base: number): Candle[] {
-  const data: Candle[] = [];
-  let p = base > 0 ? base : 0.0001;
-  for (let i = n; i >= 0; i--) {
-    const v = (Math.random() - .45) * .04;
-    const o = p, c = o * (1 + v);
-    data.push({
-      o, c,
-      h: Math.max(o, c) * (1 + Math.random() * .02),
-      l: Math.min(o, c) * (1 - Math.random() * .02),
-      vol: Math.random() * 900 + 200,
-    });
-    p = c;
-  }
-  return data;
+// ── X1 RPC helper ──────────────────────────────────────────────────────────
+async function rpc(method: string, params: unknown[]): Promise<any> {
+  const res = await fetch(X1_RPC, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+  });
+  return (await res.json()).result;
 }
 
-export default function Chart() {
-  const ref    = useRef<HTMLCanvasElement>(null);
-  const boxRef = useRef<HTMLDivElement>(null);
+// ── Parse a single transaction into a trade ────────────────────────────────
+function getUiAmount(entry: any): number {
+  if (!entry?.uiTokenAmount) return 0;
+  if (entry.uiTokenAmount.uiAmount != null) return entry.uiTokenAmount.uiAmount;
+  const decimals = entry.uiTokenAmount.decimals ?? 9;
+  return parseFloat(entry.uiTokenAmount.amount || "0") / Math.pow(10, decimals);
+}
 
-  const [tf,        setTf]        = useState<TF>("1m");
+function parseTrade(tx: any, sig: string): Trade | null {
+  try {
+    const pre  = tx.meta?.preTokenBalances  || [];
+    const post = tx.meta?.postTokenBalances || [];
+    let xntChange = 0, tokChange = 0;
+
+    for (const p of post) {
+      const pr = pre.find((x: any) => x.accountIndex === p.accountIndex);
+      if (!pr) continue;
+      const diff = getUiAmount(p) - getUiAmount(pr);
+      if (p.mint === XNT_CA)  xntChange = diff;
+      if (p.mint === PUMP_CA) tokChange = diff;
+    }
+
+    // Fallback: use native XNT balance delta if no wrapped-XNT token account moved
+    if (Math.abs(xntChange) < 0.000001) {
+      const preB  = tx.meta?.preBalances  || [];
+      const postB = tx.meta?.postBalances || [];
+      let maxSol = 0;
+      for (let i = 0; i < Math.min(preB.length, postB.length); i++) {
+        const diff = (postB[i] - preB[i]) / 1e9;
+        if (Math.abs(diff) > Math.abs(maxSol)) maxSol = diff;
+      }
+      xntChange = maxSol;
+    }
+
+    if (Math.abs(xntChange) < 0.000001 || Math.abs(tokChange) < 0.000001) return null;
+    if (Math.abs(tokChange) < 0.01) return null;
+
+    const price = Math.abs(xntChange / tokChange);
+    if (price <= 0 || !isFinite(price)) return null;
+
+    return {
+      time:  tx.blockTime,
+      xnt:   Math.abs(xntChange),
+      tok:   Math.abs(tokChange),
+      price,
+      side:  xntChange < 0 ? "SELL" : "BUY",
+      sig,
+    };
+  } catch { return null; }
+}
+
+// ── Fetch all trades from X1 RPC ───────────────────────────────────────────
+async function fetchTradesFromRpc(): Promise<Trade[]> {
+  const CACHE_KEY = "pump_chart_trades_v1";
+  const now = Date.now();
+
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+    if (cached && now - cached.timestamp < 5 * 60 * 1000) return cached.trades;
+  } catch {}
+
+  const sigs: any[] = await rpc("getSignaturesForAddress", [PUMP_CA, { limit: 1000 }]) || [];
+  if (!sigs.length) return [];
+
+  const trades: Trade[] = [];
+
+  for (let i = 0; i < sigs.length; i += 20) {
+    const batch = sigs.slice(i, i + 20);
+    const reqs  = batch.map((s: any, j: number) => ({
+      jsonrpc: "2.0", id: j,
+      method: "getTransaction",
+      params: [s.signature, { encoding: "jsonParsed", maxSupportedTransactionVersion: 0 }],
+    }));
+    try {
+      const resp    = await fetch(X1_RPC, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(reqs) });
+      const results = await resp.json();
+      if (!Array.isArray(results)) continue;
+      for (let k = 0; k < results.length; k++) {
+        const tx = results[k]?.result;
+        if (!tx) continue;
+        const t = parseTrade(tx, batch[k].signature);
+        if (t) trades.push(t);
+      }
+    } catch { continue; }
+  }
+
+  trades.sort((a, b) => a.time - b.time);
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ trades, timestamp: now })); } catch {}
+  return trades;
+}
+
+// ── Fetch live price from XDEX API ─────────────────────────────────────────
+async function fetchXdexPrice(): Promise<number> {
+  try {
+    const res  = await fetch(`${XDEX_API}/api/token-price/prices?network=${NETWORK}&token_addresses=${PUMP_CA},${XNT_CA}`);
+    const json = await res.json();
+    const prices = json?.data || json || {};
+    const extract = (entry: any) => parseFloat(entry?.price ?? entry ?? 0);
+    const pPump = extract(prices[PUMP_CA]);
+    const pXnt  = extract(prices[XNT_CA]);
+    if (pPump > 0 && pXnt > 0) return pPump / pXnt;
+  } catch {}
+
+  try {
+    const res  = await fetch(`${XDEX_API}/api/token-price/price?network=${NETWORK}&address=${PUMP_CA}`);
+    const json = await res.json();
+    const p = parseFloat(json?.data?.price ?? json?.price ?? 0);
+    if (p > 0) return p;
+  } catch {}
+
+  return 0;
+}
+
+const TF_LABELS: Record<TF, string> = { 1:"1m", 5:"5m", 15:"15m", 60:"1h", 240:"4h", 1440:"1d" };
+
+const fmt = (n: number) => {
+  if (!n || n <= 0) return "0.000000";
+  if (n >= 1)      return n.toFixed(4);
+  if (n >= 0.01)   return n.toFixed(6);
+  if (n >= 0.0001) return n.toFixed(8);
+  return n.toFixed(10);
+};
+
+// ── Chart Component ────────────────────────────────────────────────────────
+export default function Chart() {
+  const iframeRef     = useRef<HTMLIFrameElement>(null);
+  const chartReadyRef = useRef(false);
+  const pendingRef    = useRef<any>(null);
+  const tradesRef     = useRef<Trade[]>([]);
+
+  const [tf,        setTf]        = useState<TF>(60);
   const [price,     setPrice]     = useState("—");
   const [change,    setChange]    = useState("PUMP/XNT");
   const [changePos, setChangePos] = useState(true);
-  const [liveVol,   setLiveVol]   = useState(0);
-  const [poolAddr,  setPoolAddr]  = useState<string | null>(null);
+  const [ohlcv,     setOhlcv]     = useState<OHLCV>({ o:0, h:0, l:0, c:0, v:0, active:false });
+  const [loading,   setLoading]   = useState(true);
+  const [showVol,   setShowVol]   = useState(false);
 
-  const allData = useRef<Record<TF, Candle[]>>({
-    "1m": genHistory(60, 0.0001),
-    "5m": genHistory(60, 0.0001),
-    "1h": genHistory(60, 0.0001),
-    "1d": genHistory(60, 0.0001),
-  });
+  const sendTrades = useCallback((trades: Trade[], currentTf: TF) => {
+    const msg = { type: "trades", trades, tf: currentTf };
+    if (chartReadyRef.current && iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(msg, "*");
+    } else {
+      pendingRef.current = msg;
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      const msg = e.data;
+      if (msg.type === "chartReady") {
+        chartReadyRef.current = true;
+        if (pendingRef.current && iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(pendingRef.current, "*");
+          pendingRef.current = null;
+        }
+      } else if (msg.type === "ohlcv") {
+        setOhlcv({ o: msg.o, h: msg.h, l: msg.l, c: msg.cl, v: msg.v, active: true });
+      } else if (msg.type === "ohlcv_clear") {
+        setOhlcv(prev => ({ ...prev, active: false }));
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
 
   const tfRef = useRef(tf);
   tfRef.current = tf;
 
-  const draw = useCallback(() => {
-    const cvs = ref.current;
-    const box = boxRef.current;
-    if (!cvs || !box) return;
-    cvs.width  = box.clientWidth;
-    cvs.height = box.clientHeight;
-    const W = cvs.width, H = cvs.height;
-    if (!W || !H) return;
-
-    const ctx = cvs.getContext("2d")!;
-    ctx.clearRect(0, 0, W, H);
-    const data = allData.current[tfRef.current];
-
-    ctx.strokeStyle = "rgba(0,120,200,0.06)"; ctx.lineWidth = 1;
-    for (let i = 0; i <= 5; i++) { const y = H * i / 5; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-    for (let i = 0; i <= 7; i++) { const x = W * i / 7; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-
-    const vH = H * .18, cH = H * .76;
-    const prices = data.flatMap(d => [d.h, d.l]);
-    const mn = Math.min(...prices), mx = Math.max(...prices), rng = mx - mn || 1;
-    const cw = Math.max(2, (W - 20) / data.length - 1);
-    const mvol = Math.max(...data.map(d => d.vol));
-
-    data.forEach((d, i) => {
-      const x = 10 + i * (W - 20) / data.length;
-      const bull = d.c >= d.o;
-      const vh = (d.vol / mvol) * vH * .85;
-      ctx.fillStyle = bull ? "rgba(0,150,255,.2)" : "rgba(255,70,70,.15)";
-      ctx.fillRect(x, H - vh, cw, vh);
-      const oy = cH * (mx - d.o) / rng, cy2 = cH * (mx - d.c) / rng;
-      const by = Math.min(oy, cy2), bh = Math.max(Math.abs(oy - cy2), 1.5);
-      if (bull) {
-        const gr = ctx.createLinearGradient(0, by, 0, by + bh);
-        gr.addColorStop(0, "rgba(0,180,255,.95)"); gr.addColorStop(1, "rgba(0,100,200,.55)");
-        ctx.fillStyle = gr;
-      } else { ctx.fillStyle = "rgba(220,60,60,.75)"; }
-      ctx.fillRect(x, by, cw, bh);
-      ctx.strokeStyle = bull ? "rgba(0,170,255,.6)" : "rgba(220,60,60,.5)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x + cw / 2, cH * (mx - d.h) / rng);
-      ctx.lineTo(x + cw / 2, cH * (mx - d.l) / rng);
-      ctx.stroke();
-    });
-
-    const ld = data[data.length - 1];
-    const lx = 10 + (data.length - 1) * (W - 20) / data.length;
-    const ly = cH * (mx - ld.c) / rng;
-    const gg = ctx.createRadialGradient(lx, ly, 0, lx, ly, 50);
-    gg.addColorStop(0, "rgba(0,170,255,.2)"); gg.addColorStop(1, "transparent");
-    ctx.fillStyle = gg; ctx.fillRect(lx - 50, ly - 50, 100, 100);
-    ctx.strokeStyle = "rgba(0,150,255,.4)"; ctx.lineWidth = 1;
-    ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = "rgba(0,170,255,.5)"; ctx.font = "9px DM Mono,monospace";
-    for (let i = 0; i <= 4; i++) {
-      const p = mn + (mx - mn) * i / 4;
-      ctx.fillText(p < 0.001 ? p.toExponential(3) : p.toFixed(6), 3, cH * (mx - p) / rng + 4);
-    }
-  }, []);
-
-  const fetchPrice = useCallback(async () => {
-    try {
-      const res  = await fetch(PRICE_URL, { cache: "no-store" });
-      const json = await res.json();
-      const rawPrice: number =
-        json?.data?.price     ??
-        json?.data?.price_usd ??
-        json?.price           ??
-        0;
-      if (rawPrice > 0) {
-        setPrice(rawPrice < 0.001 ? rawPrice.toExponential(4) : rawPrice.toFixed(6));
-        (Object.keys(allData.current) as TF[]).forEach(t => {
-          const d = allData.current[t];
-          const last = d[d.length - 1];
-          last.c = rawPrice;
-          last.h = Math.max(last.h, rawPrice);
-          last.l = Math.min(last.l, rawPrice);
-          last.vol += Math.random() * 5;
-          const prev = d[d.length - 2];
-          if (prev) {
-            const chg = ((rawPrice - prev.c) / prev.c * 100).toFixed(2);
-            setChange((Number(chg) >= 0 ? "+" : "") + chg + "% · PUMP/XNT");
-            setChangePos(Number(chg) >= 0);
-          }
-        });
-        draw();
-      }
-    } catch {
-      // API unavailable — keep simulating
-    }
-  }, [draw]);
-
-  const fetchPool = useCallback(async () => {
-    try {
-      const res  = await fetch(POOL_URL, { cache: "no-store" });
-      const json = await res.json();
-      const addr = json?.data?.pool_address ?? json?.data?.address ?? null;
-      if (addr) setPoolAddr(addr);
-      const vol = json?.data?.volume_24h ?? json?.data?.volume ?? 0;
-      if (vol) setLiveVol(vol);
-    } catch { /* silent */ }
-  }, []);
-
-  // Seed with live price on mount
   useEffect(() => {
-    fetchPool();
     (async () => {
       try {
-        const res  = await fetch(PRICE_URL, { cache: "no-store" });
-        const json = await res.json();
-        const rawPrice: number = json?.data?.price ?? json?.data?.price_usd ?? json?.price ?? 0;
-        if (rawPrice > 0) {
-          (["1m","5m","1h","1d"] as TF[]).forEach(t => {
-            allData.current[t] = genHistory(60, rawPrice);
-          });
-          setPrice(rawPrice < 0.001 ? rawPrice.toExponential(4) : rawPrice.toFixed(6));
+        const trades = await fetchTradesFromRpc();
+        tradesRef.current = trades;
+        setLoading(false);
+        if (trades.length) {
+          sendTrades(trades, tfRef.current);
+          const latest = trades[trades.length - 1];
+          if (latest?.price > 0) setPrice(fmt(latest.price));
         }
-      } catch { /* silent */ }
-      draw();
+      } catch {
+        setLoading(false);
+      }
+
+      const xdexPrice = await fetchXdexPrice();
+      if (xdexPrice > 0) setPrice(fmt(xdexPrice));
     })();
+
+    const priceIv = setInterval(async () => {
+      const p = await fetchXdexPrice();
+      if (p > 0) setPrice(fmt(p));
+    }, 30_000);
+
+    const tradesIv = setInterval(async () => {
+      try {
+        const trades = await fetchTradesFromRpc();
+        if (trades.length) {
+          tradesRef.current = trades;
+          sendTrades(trades, tfRef.current);
+        }
+      } catch {}
+    }, 60_000);
+
+    return () => { clearInterval(priceIv); clearInterval(tradesIv); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    draw();
-    const poll = setInterval(fetchPrice, 15_000);
-    const sim  = setInterval(() => {
-      (Object.keys(allData.current) as TF[]).forEach(t => {
-        const d = allData.current[t];
-        const l = d[d.length - 1];
-        const v = (Math.random() - .48) * .012;
-        const nc = Math.max(l.c * (1 + v), 0.000001);
-        l.c = nc; l.h = Math.max(l.h, nc); l.l = Math.min(l.l, nc); l.vol += Math.random() * 5;
-      });
-      draw();
-    }, 1200);
-    window.addEventListener("resize", draw);
-    return () => { clearInterval(poll); clearInterval(sim); window.removeEventListener("resize", draw); };
-  }, [tf, fetchPrice, draw]);
+  const handleTf = (newTf: TF) => {
+    setTf(newTf);
+    tfRef.current = newTf;
+    if (iframeRef.current?.contentWindow && tradesRef.current.length) {
+      iframeRef.current.contentWindow.postMessage({ type: "setTF", tf: newTf }, "*");
+    }
+  };
 
-  const tfs: TF[] = ["1m", "5m", "1h", "1d"];
+  const handleVol = () => {
+    const next = !showVol;
+    setShowVol(next);
+    iframeRef.current?.contentWindow?.postMessage({ type: "setVol", vol: next }, "*");
+  };
+
+  const TFS: TF[] = [1, 5, 15, 60, 240, 1440];
 
   return (
-    <div style={{ background:"var(--card)", border:"1px solid var(--border)", position:"relative", overflow:"hidden" }}>
-      <div style={{ position:"absolute", top:0, left:0, right:0, height:1, background:"linear-gradient(90deg,transparent,var(--blue),transparent)" }} />
-      <div style={{ padding:"18px 22px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
+    <div style={{ background: "var(--card)", border: "1px solid var(--border)", position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,var(--blue),transparent)" }} />
+
+      {/* Header */}
+      <div style={{ padding: "18px 22px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <div>
-          <div style={{ fontFamily:"var(--font-mono)", fontSize:"1.6rem", color:"#fff", display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "1.6rem", color: "#fff", display: "flex", alignItems: "center", gap: 10 }}>
             {price}
-            <span style={{ fontSize:".75rem", padding:"3px 10px",
+            <span style={{
+              fontSize: ".75rem", padding: "3px 10px",
               background: changePos ? "rgba(0,170,255,.1)" : "rgba(255,60,60,.12)",
               color: changePos ? "var(--blue)" : "#ff4444",
-              fontFamily:"var(--font-mono)", letterSpacing:".05em" }}>
+              fontFamily: "var(--font-mono)", letterSpacing: ".05em",
+            }}>
               {change}
             </span>
           </div>
-          <div style={{ fontSize:".65rem", color:"var(--text-dim)", marginTop:4, fontFamily:"var(--font-mono)", display:"flex", gap:16 }}>
-            <span>{PUMP_CA.slice(0,6)}...{PUMP_CA.slice(-4)}</span>
-            {liveVol > 0 && <span>VOL {liveVol.toLocaleString()}</span>}
-            {poolAddr && <span style={{ color:"var(--blue)" }}>Pool: {poolAddr.slice(0, 8)}…</span>}
+          <div style={{ fontSize: ".65rem", color: "var(--text-dim)", marginTop: 4, fontFamily: "var(--font-mono)", display: "flex", gap: 16 }}>
+            <span>Pumps1...Szb2C</span>
+            <span style={{ color: "var(--blue)" }}>· X1 RPC + XDEX</span>
+            {loading && <span style={{ color: "rgba(0,170,255,.4)" }}>Loading trades...</span>}
           </div>
         </div>
-        <div style={{ display:"flex", gap:3 }}>
-          {tfs.map(t => (
-            <button key={t}
-              className={`tf-btn${tf === t ? " active" : ""}`}
-              onClick={() => { setTf(t); setTimeout(draw, 0); }}>
-              {t.toUpperCase()}
+        <div style={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+          {TFS.map(t => (
+            <button key={t} className={`tf-btn${tf === t ? " active" : ""}`} onClick={() => handleTf(t)}>
+              {TF_LABELS[t]}
             </button>
           ))}
+          <button className={`tf-btn${showVol ? " active" : ""}`} onClick={handleVol}>Vol</button>
         </div>
       </div>
-      <div ref={boxRef} style={{ height:340, padding:6 }}>
-        <canvas ref={ref} style={{ width:"100%", height:"100%", display:"block" }} />
+
+      {/* OHLCV row */}
+      <div style={{ padding: "8px 22px", borderBottom: "1px solid rgba(0,170,255,.06)", display: "flex", gap: 16, fontFamily: "var(--font-mono)", fontSize: ".65rem" }}>
+        {ohlcv.active ? (
+          <>
+            <span style={{ color: "var(--text-dim)" }}>O <span style={{ color: "#fff" }}>{fmt(ohlcv.o)}</span></span>
+            <span style={{ color: "var(--text-dim)" }}>H <span style={{ color: "var(--blue)" }}>{fmt(ohlcv.h)}</span></span>
+            <span style={{ color: "var(--text-dim)" }}>L <span style={{ color: "#ff4444" }}>{fmt(ohlcv.l)}</span></span>
+            <span style={{ color: "var(--text-dim)" }}>C <span style={{ color: "#fff" }}>{fmt(ohlcv.c)}</span></span>
+            <span style={{ color: "var(--text-dim)" }}>Vol <span style={{ color: "#fff" }}>{Math.round(ohlcv.v).toLocaleString()}</span></span>
+          </>
+        ) : (
+          <span style={{ color: "rgba(0,170,255,.3)" }}>Hover a candle to see OHLCV</span>
+        )}
       </div>
-      <div style={{ padding:"8px 22px 12px", borderTop:"1px solid rgba(0,170,255,.06)", display:"flex", gap:24 }}>
-        {[["SRC","api.xdex.xyz"],["NET","X1 Mainnet"],["POLL","15s"]].map(([k,v])=>(
-          <div key={k} style={{ fontFamily:"var(--font-mono)", fontSize:".62rem", color:"var(--text-dim)" }}>
-            <span style={{ color:"rgba(0,170,255,.4)" }}>{k}</span> {v}
+
+      {/* Chart iframe */}
+      <div style={{ height: 380, position: "relative" }}>
+        {loading && (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(0,170,255,.4)", fontFamily: "var(--font-mono)", fontSize: ".75rem", zIndex: 1, pointerEvents: "none" }}>
+            Fetching trades from X1 RPC...
           </div>
-        ))}
+        )}
+        <iframe
+          ref={iframeRef}
+          src="/chart.html"
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+        />
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: "8px 22px 12px", borderTop: "1px solid rgba(0,170,255,.06)", display: "flex", gap: 20, fontFamily: "var(--font-mono)", fontSize: ".6rem", color: "var(--text-dim)" }}>
+        <span><span style={{ color: "rgba(0,170,255,.4)" }}>SRC</span> X1 RPC + api.xdex.xyz</span>
+        <span><span style={{ color: "rgba(0,170,255,.4)" }}>NET</span> X1 Mainnet</span>
+        <span><span style={{ color: "rgba(0,170,255,.4)" }}>PRICE POLL</span> 30s</span>
       </div>
     </div>
   );
