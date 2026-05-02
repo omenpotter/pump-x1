@@ -12,6 +12,7 @@ const OrbCanvas   = dynamic(() => import("@/components/OrbCanvas"),       { ssr:
 const Chart       = dynamic(() => import("@/components/Chart"),           { ssr: false });
 const TkCanvas    = dynamic(() => import("@/components/TokenomicsCanvas"),{ ssr: false });
 const Navbar      = dynamic(() => import("@/components/Navbar"),          { ssr: false });
+const TradeFeed   = dynamic(() => import("@/components/TradeFeed"),       { ssr: false });
 
 const CA = "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C";
 const EXPLORER = `https://explorer.mainnet.x1.xyz/address/${CA}`;
@@ -129,6 +130,27 @@ export default function Home() {
               </ScrollFade>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── LIVE FEED ── */}
+      <section style={{ position:"relative", zIndex:2, padding:"0 5vw 80px" }}>
+        <div style={{ maxWidth:1380, margin:"0 auto" }}>
+          <ScrollFade>
+            <div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".25em",
+              color:"var(--blue)", textTransform:"uppercase", marginBottom:12,
+              display:"flex", alignItems:"center", gap:10 }}>
+              <span style={{ color:"rgba(0,170,255,.3)", fontSize:".62rem" }}>//</span>
+              Live Feed
+            </div>
+          </ScrollFade>
+          <ScrollFade delay={80}>
+            <h2 style={{ fontFamily:"var(--font-bebas)", fontSize:"clamp(2.5rem,5vw,4.5rem)",
+              color:"#fff", lineHeight:1, letterSpacing:".03em", marginBottom:40 }}>
+              TRANSACTIONS <span style={{ color:"var(--blue)" }}>&amp; HOLDERS</span>
+            </h2>
+          </ScrollFade>
+          <TradeFeed />
         </div>
       </section>
 
