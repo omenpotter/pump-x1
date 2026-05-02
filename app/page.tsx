@@ -77,8 +77,8 @@ export default function Home() {
       {/* ── TICKER ── */}
       <div style={{ overflow:"hidden", borderTop:"1px solid rgba(0,170,255,.06)", borderBottom:"1px solid rgba(0,170,255,.06)", background:"rgba(0,170,255,.02)", padding:"12px 0", position:"relative", zIndex:2 }}>
         <div className="ticker-track" style={{ display:"flex", gap:60, width:"max-content" }}>
-          {["PUMP/XN ∞","TOKEN-2022 STANDARD","X1 MAINNET · SVM","FIXED SUPPLY 18,446,744,073","0% INFLATION EVER","PUMP IT ON X1","COMMUNITY 100%","NO MINT AUTHORITY",
-            "PUMP/XN ∞","TOKEN-2022 STANDARD","X1 MAINNET · SVM","FIXED SUPPLY 18,446,744,073","0% INFLATION EVER","PUMP IT ON X1","COMMUNITY 100%","NO MINT AUTHORITY"
+          {["PUMP/XNT ∞","TOKEN-2022 STANDARD","X1 MAINNET · SVM","FIXED SUPPLY 18,446,744,073","0% INFLATION EVER","PUMP IT ON X1","COMMUNITY 100%","NO MINT AUTHORITY",
+            "PUMP/XNT ∞","TOKEN-2022 STANDARD","X1 MAINNET · SVM","FIXED SUPPLY 18,446,744,073","0% INFLATION EVER","PUMP IT ON X1","COMMUNITY 100%","NO MINT AUTHORITY"
           ].map((t,i)=>(
             <span key={i} style={{ fontFamily:"var(--font-mono)", fontSize:".7rem", letterSpacing:".1em", color:"var(--text-dim)", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:14 }}>
               <span style={{ color:"rgba(0,170,255,.2)", fontSize:".4rem" }}>◆</span>{t}
