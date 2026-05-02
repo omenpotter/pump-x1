@@ -58,6 +58,7 @@ body {
   50% { filter: drop-shadow(0 0 36px rgba(0,170,255,1)) drop-shadow(0 0 72px rgba(0,170,255,.5)) }
 }
 @keyframes dpFloat { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-8px) } }
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
 @keyframes rmPulse { 0%,100% { box-shadow:0 0 0 0 rgba(0,170,255,.4) } 50% { box-shadow:0 0 0 10px rgba(0,170,255,0) } }
 
 /* Fade animations */
