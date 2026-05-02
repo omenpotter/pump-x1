@@ -1,9 +1,7 @@
-"use client";
-
-import { useState } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import ScrollFade from "@/components/ScrollFade";
+import CopyBtn from "@/components/CopyBtn";
 
 const Loader      = dynamic(() => import("@/components/Loader"),          { ssr: false });
 const Cursor      = dynamic(() => import("@/components/Cursor"),          { ssr: false });
@@ -286,23 +284,5 @@ export default function Home() {
         </div>
       </footer>
     </>
-  );
-}
-
-function CopyBtn({ ca }: { ca: string }) {
-  "use client";
-  const [copied, setCopied] = useState(false);
-  return (
-    <button onClick={() => {
-      if (typeof navigator !== "undefined") {
-        navigator.clipboard.writeText(ca).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        });
-      }
-    }}
-      style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 18px", border:"1px solid rgba(0,170,255,.3)", color: copied ? "#00ffaa" : "var(--blue)", fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".1em", background: copied ? "rgba(0,255,170,.06)" : "transparent", cursor:"pointer", transition:"all .2s" }}>
-      {copied ? "✓ Copied!" : "⎘ Copy Address"}
-    </button>
   );
 }
