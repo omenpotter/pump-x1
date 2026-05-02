@@ -9,9 +9,9 @@ export default function OrbCanvas() {
     const canvas = ref.current!;
     const wrap   = wrapRef.current!;
 
-    // Measure real pixel size BEFORE Three.js touches the canvas.
-    // clientWidth is 0 during Vercel SSR/static phase — getBoundingClientRect fixes that.
-    const SIZE = Math.round(Math.min(wrap.getBoundingClientRect().width || 520, 520));
+    // Fixed size — bypasses layout-timing issues where getBoundingClientRect()
+    // returns 0 when the parent CSS Grid hasn't completed layout yet.
+    const SIZE = 480;
     canvas.width  = SIZE;
     canvas.height = SIZE;
 
@@ -174,7 +174,7 @@ export default function OrbCanvas() {
   return (
     <div
       ref={wrapRef}
-      style={{ width: "min(520px, 88vw)", aspectRatio: "1 / 1", position: "relative" }}
+      style={{ width: 480, height: 480, maxWidth: "88vw", position: "relative", flexShrink: 0 }}
     >
       <canvas
         ref={ref}

@@ -2,11 +2,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 // ── Constants ──────────────────────────────────────────────────────────────
-const PUMP_CA  = "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C";
-const XNT_CA   = "XNMbEwZFFBKQhqyW3taa8cAUp1xBUHfyzRFJQvZET4m";
-const X1_RPC   = "https://rpc.mainnet.x1.xyz/";
-const XDEX_API = "https://api.xdex.xyz";
-const NETWORK  = "X1%20Mainnet";
+const PUMP_CA = "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C";
+const XNT_CA  = "XNMbEwZFFBKQhqyW3taa8cAUp1xBUHfyzRFJQvZET4m";
+const X1_RPC  = "https://rpc.mainnet.x1.xyz/";
+const NETWORK = "X1%20Mainnet";
 
 type TF = 1 | 5 | 15 | 60 | 240 | 1440;
 type Trade = { time: number; xnt: number; tok: number; price: number; side: "BUY" | "SELL"; sig: string };
@@ -116,7 +115,7 @@ async function fetchTradesFromRpc(): Promise<Trade[]> {
 // ── Fetch live price from XDEX API ─────────────────────────────────────────
 async function fetchXdexPrice(): Promise<number> {
   try {
-    const res  = await fetch(`${XDEX_API}/api/token-price/prices?network=${NETWORK}&token_addresses=${PUMP_CA},${XNT_CA}`);
+    const res  = await fetch(`/api/xdex?path=/api/token-price/prices&network=${NETWORK}&token_addresses=${PUMP_CA},${XNT_CA}`);
     const json = await res.json();
     const prices = json?.data || json || {};
     const extract = (entry: any) => parseFloat(entry?.price ?? entry ?? 0);
@@ -126,7 +125,7 @@ async function fetchXdexPrice(): Promise<number> {
   } catch {}
 
   try {
-    const res  = await fetch(`${XDEX_API}/api/token-price/price?network=${NETWORK}&address=${PUMP_CA}`);
+    const res  = await fetch(`/api/xdex?path=/api/token-price/price&network=${NETWORK}&address=${PUMP_CA}`);
     const json = await res.json();
     const p = parseFloat(json?.data?.price ?? json?.price ?? 0);
     if (p > 0) return p;
