@@ -270,7 +270,7 @@ export default function Home() {
           <ScrollFade delay={160}><p style={{ fontSize:"1rem", color:"var(--text-dim)", lineHeight:1.8, marginBottom:48 }}>PUMP is nothing without the people behind it. Join the growing community of X1 believers.</p></ScrollFade>
           <ScrollFade delay={240}>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14, maxWidth:540, margin:"0 auto" }}>
-              {[{icon:"✕",label:"Twitter / X",href:"https://x.com/pumpx1xyz"},{icon:"✈",label:"Telegram",href:TELEGRAM},{icon:"◎",label:"Website",href:WEBSITE},{icon:"◉",label:"Explorer",href:EXPLORER}].map(({icon,label,href})=>(
+              {[{icon:"✈",label:"Telegram",href:TELEGRAM},{icon:"◎",label:"Website",href:WEBSITE},{icon:"◉",label:"Explorer",href:EXPLORER}].map(({icon,label,href})=>(
                 <a key={label} href={href} target="_blank" className="soc-clip soc-c" style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:10, padding:"24px 16px", background:"var(--card)", border:"1px solid var(--border)", textDecoration:"none", color:"inherit", transition:"all .3s" }}>
                   <div style={{ fontSize:"1.5rem" }}>{icon}</div>
                   <div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".14em", color:"var(--text-dim)", textTransform:"uppercase" }}>{label}</div>
