@@ -4,14 +4,14 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://pump-x1.vercel.app'),
+  metadataBase: new URL('https://www.pumpx1.xyz'),
   title: 'PUMP — Pump It On X1',
   description: 'The viral token movement of X1 Mainnet. Token-2022 standard. Fixed supply. Community-first.',
   keywords: ['PUMP', 'X1', 'X1 Mainnet', 'Token-2022', 'crypto', 'SVM'],
   openGraph: {
     title: 'PUMP — Pump It On X1',
     description: 'The viral token movement of X1 Mainnet.',
-    url: 'https://pump-x1.vercel.app',
+    url: 'https://www.pumpx1.xyz',
     siteName: 'PUMP X1',
     images: [{ url: '/pump-token.png', width: 1200, height: 630, alt: 'PUMP Token on X1' }],
     type: 'website',
@@ -138,6 +138,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <link rel="canonical" href="https://www.pumpx1.xyz/" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://rpc.mainnet.x1.xyz" />

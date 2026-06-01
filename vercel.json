@@ -1,5 +1,13 @@
 {
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "pump-x1.vercel.app" }],
+      "destination": "https://www.pumpx1.xyz/$1",
+      "permanent": true
+    }
+  ]
 }
