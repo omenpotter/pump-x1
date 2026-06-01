@@ -303,6 +303,7 @@ export default function Chart() {
         <iframe
           ref={iframeRef}
           src="/chart.html"
+          title="PUMP Token Price Chart"
           style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
         />
       </div>

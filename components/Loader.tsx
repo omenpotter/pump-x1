@@ -33,7 +33,7 @@ export default function Loader() {
       }}
     >
       <div style={{ position: "relative", width: 160, height: 160, marginBottom: 32 }}>
-        <Image src="/pump-token.png" alt="PUMP" width={160} height={160}
+        <Image src="/pump-token-sm.png" alt="PUMP" width={160} height={160}
           style={{ borderRadius: "50%", objectFit: "contain", animation: "ldAssemble 1.2s cubic-bezier(.16,1,.3,1) forwards",
             filter: "drop-shadow(0 0 30px rgba(0,170,255,.9)) drop-shadow(0 0 60px rgba(0,170,255,.4))" }} />
         <div style={{ position: "absolute", inset: -16, border: "1px solid rgba(0,170,255,.3)", borderRadius: "50%", animation: "ldRing 3s linear infinite" }} />

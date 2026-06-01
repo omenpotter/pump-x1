@@ -2,15 +2,24 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import ScrollFade from "@/components/ScrollFade";
 import CopyBtn from "@/components/CopyBtn";
+import LazySection from "@/components/LazySection";
 
 const Loader      = dynamic(() => import("@/components/Loader"),          { ssr: false });
 const Cursor      = dynamic(() => import("@/components/Cursor"),          { ssr: false });
 const HeroCanvas  = dynamic(() => import("@/components/HeroCanvas"),      { ssr: false });
 const OrbCanvas   = dynamic(() => import("@/components/OrbCanvas"),       { ssr: false });
-const Chart       = dynamic(() => import("@/components/Chart"),           { ssr: false });
+const Chart     = dynamic(() => import("@/components/Chart"),     { ssr: false, loading: () => (
+  <div style={{ height: 420, background: "rgba(4,12,22,0.85)", border: "1px solid rgba(0,170,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-mono)", fontSize: ".72rem", color: "rgba(0,170,255,0.3)", letterSpacing: ".1em" }}>
+    LOADING PRICE TERMINAL...
+  </div>
+)});
 const TkCanvas    = dynamic(() => import("@/components/TokenomicsCanvas"),{ ssr: false });
 const Navbar      = dynamic(() => import("@/components/Navbar"),          { ssr: false });
-const TradeFeed   = dynamic(() => import("@/components/TradeFeed"),       { ssr: false });
+const TradeFeed = dynamic(() => import("@/components/TradeFeed"), { ssr: false, loading: () => (
+  <div style={{ height: 320, background: "rgba(4,12,22,0.85)", border: "1px solid rgba(0,170,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-mono)", fontSize: ".72rem", color: "rgba(0,170,255,0.3)", letterSpacing: ".1em" }}>
+    LOADING LIVE FEED...
+  </div>
+)});
 
 const CA = "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C";
 const EXPLORER = `https://explorer.mainnet.x1.xyz/address/${CA}`;
@@ -107,7 +116,9 @@ export default function Home() {
           <ScrollFade delay={80}><h2 style={{ fontFamily:"var(--font-bebas)", fontSize:"clamp(2.5rem,5vw,4.5rem)", color:"#fff", lineHeight:1, letterSpacing:".03em", marginBottom:18 }}>PRICE <span style={{ color:"var(--blue)" }}>TERMINAL</span></h2></ScrollFade>
           <ScrollFade delay={160}><p style={{ fontSize:"1rem", color:"var(--text-dim)", maxWidth:540, lineHeight:1.8, marginBottom:56 }}>Real-time PUMP activity on X1 Mainnet. Simulated market feed — live data via xDEX when available.</p></ScrollFade>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 340px", gap:20, alignItems:"start" }}>
-            <ScrollFade className="fade-left"><Chart /></ScrollFade>
+            <ScrollFade className="fade-left">
+              <LazySection><Chart /></LazySection>
+            </ScrollFade>
             <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
               {[["Total Supply","18,446,744,073","FIXED"],["Standard","Token-2022","SPL EXT"],["Decimals","9","NATIVE"],["Network","X1 Mainnet","SVM"],["Mint Authority","DISABLED","LOCKED",true],["Inflation","0%","NONE",true]].map(([lbl,val,badge,blue],i)=>(
                 <ScrollFade key={String(lbl)} delay={i*60}>
@@ -148,7 +159,7 @@ export default function Home() {
               TRANSACTIONS <span style={{ color:"var(--blue)" }}>&amp; HOLDERS</span>
             </h2>
           </ScrollFade>
-          <TradeFeed />
+          <LazySection><TradeFeed /></LazySection>
         </div>
       </section>
 
@@ -161,7 +172,7 @@ export default function Home() {
             <div className="ctr-clip" style={{ background:"var(--card)", border:"1px solid var(--border)", padding:"40px 48px", position:"relative", overflow:"hidden", maxWidth:860 }}>
               <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at top left,rgba(0,170,255,.05) 0%,transparent 60%)", pointerEvents:"none" }} />
               <div style={{ float:"right", width:88, height:88, borderRadius:"50%", overflow:"hidden", border:"2px solid rgba(0,170,255,.4)", filter:"drop-shadow(0 0 16px rgba(0,170,255,.7))", marginLeft:28, marginBottom:16, flexShrink:0 }}>
-                <Image src="/pump-token.png" alt="PUMP" width={88} height={88} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                <Image src="/pump-token-sm.png" alt="PUMP" width={88} height={88} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
               </div>
               <div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".2em", color:"var(--blue)", textTransform:"uppercase", marginBottom:24, display:"flex", alignItems:"center", gap:8 }}>
                 <div className="blink-dot" />Contract Address — X1 Mainnet
@@ -194,7 +205,7 @@ export default function Home() {
           <ScrollFade delay={160}><p style={{ fontSize:"1rem", color:"var(--text-dim)", maxWidth:540, lineHeight:1.8, marginBottom:56 }}>Every aspect of PUMP is designed with one goal — momentum on X1.</p></ScrollFade>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))", gap:18 }}>
             {[
-              { icon: <Image src="/pump-token.png" alt="PUMP" width={48} height={48} style={{ borderRadius:"50%", objectFit:"contain", filter:"drop-shadow(0 0 8px rgba(0,170,255,.5))" }} />, title:"FAST", desc:"X1 processes at SVM speed. Sub-second finality, ultra-low fees. Built for traders who don't wait." },
+              { icon: <Image src="/pump-token-sm.png" alt="PUMP" width={48} height={48} style={{ borderRadius:"50%", objectFit:"contain", filter:"drop-shadow(0 0 8px rgba(0,170,255,.5))" }} />, title:"FAST", desc:"X1 processes at SVM speed. Sub-second finality, ultra-low fees. Built for traders who don't wait." },
               { icon:"🔒", title:"FIXED SUPPLY", desc:"18.4 billion tokens. Minted once. Mint authority disabled forever. No dilution, no schedules." },
               { icon:"◈", title:"TOKEN-2022", desc:"Next-generation Solana token standard with metadata extensions and future-proof architecture." },
               { icon:"◎", title:"COMMUNITY", desc:"100% community owned. No VC allocation. No insider unlock. PUMP belongs to X1 believers." },
@@ -230,7 +241,7 @@ export default function Home() {
                   <div style={{ display:"flex", alignItems:"center", gap:14, padding:"16px 18px", background:"var(--card)", border:"1px solid var(--border)", transition:"all .3s" }}>
                     <div style={{ width:4, alignSelf:"stretch", borderRadius:2, background:clr, flexShrink:0 }} />
                     <div style={{ width:36, height:36, borderRadius:"50%", overflow:"hidden", border:"1px solid rgba(0,170,255,.3)", filter:"drop-shadow(0 0 6px rgba(0,170,255,.4))", flexShrink:0 }}>
-                      <Image src="/pump-token.png" alt="PUMP" width={36} height={36} style={{ width:"100%", height:"100%", objectFit:"cover", opacity:op }} />
+                      <Image src="/pump-token-sm.png" alt="PUMP" width={36} height={36} style={{ width:"100%", height:"100%", objectFit:"cover", opacity:op }} />
                     </div>
                     <div style={{ flex:1 }}>
                       <div style={{ fontWeight:700, fontSize:".88rem", color:"#fff", marginBottom:3 }}>{label}</div>
@@ -252,7 +263,7 @@ export default function Home() {
         <div style={{ maxWidth:780, margin:"0 auto" }}>
           <ScrollFade>
             <div style={{ width:100, height:100, borderRadius:"50%", overflow:"hidden", margin:"0 auto 28px", border:"2px solid rgba(0,170,255,.4)", animation:"cmPulse 3s ease-in-out infinite" }}>
-              <Image src="/pump-token.png" alt="PUMP" width={100} height={100} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+              <Image src="/pump-token-sm.png" alt="PUMP" width={100} height={100} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
             </div>
           </ScrollFade>
           <ScrollFade delay={80}><h2 style={{ fontFamily:"var(--font-bebas)", fontSize:"clamp(3rem,7vw,6rem)", color:"#fff", letterSpacing:".04em", marginBottom:18, background:"linear-gradient(135deg,#fff 20%,var(--blue))", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>JOIN THE<br/>MOVEMENT</h2></ScrollFade>
@@ -274,7 +285,7 @@ export default function Home() {
       <footer style={{ position:"relative", zIndex:2, borderTop:"1px solid rgba(0,170,255,.07)", padding:"44px 5vw", background:"rgba(3,6,9,.92)" }}>
         <div style={{ maxWidth:1380, margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:20 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <Image src="/pump-token.png" alt="PUMP" width={28} height={28} style={{ borderRadius:"50%", objectFit:"contain", filter:"drop-shadow(0 0 8px rgba(0,170,255,.7))" }} />
+            <Image src="/pump-token-sm.png" alt="PUMP" width={28} height={28} style={{ borderRadius:"50%", objectFit:"contain", filter:"drop-shadow(0 0 8px rgba(0,170,255,.7))" }} />
             <span style={{ fontFamily:"var(--font-bebas)", fontSize:"1.3rem", letterSpacing:".18em", color:"#fff" }}>PUMP<span style={{ color:"var(--cyan)" }}>.X1</span></span>
           </div>
           <div style={{ fontSize:".74rem", color:"var(--text-dim)", maxWidth:460, lineHeight:1.65, textAlign:"center" }}>PUMP is a community Token-2022 asset on X1 Mainnet. Not financial advice. Always DYOR. Smart contract is unaudited. Trade at your own risk.</div>

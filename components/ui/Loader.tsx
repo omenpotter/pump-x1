@@ -22,7 +22,7 @@ export default function Loader() {
       <div style={{position:'relative',width:160,height:160,marginBottom:28}}>
         <div style={{position:'absolute',inset:-16,borderRadius:'50%',border:'1px solid rgba(0,170,255,.3)',animation:'spin 3s linear infinite'}}/>
         <div style={{position:'absolute',inset:-28,borderRadius:'50%',border:'1px dashed rgba(0,170,255,.15)',animation:'spin 5s linear infinite reverse'}}/>
-        <Image src="/pump-token.png" alt="PUMP" width={160} height={160} style={{borderRadius:'50%',objectFit:'contain',filter:'drop-shadow(0 0 30px rgba(0,170,255,.9)) drop-shadow(0 0 60px rgba(0,170,255,.4))'}} priority/>
+        <Image src="/pump-token-sm.png" alt="PUMP" width={160} height={160} style={{borderRadius:'50%',objectFit:'contain',filter:'drop-shadow(0 0 30px rgba(0,170,255,.9)) drop-shadow(0 0 60px rgba(0,170,255,.4))'}} priority/>
       </div>
       <div style={{fontFamily:'Bebas Neue,sans-serif',fontSize:'4rem',letterSpacing:'.3em',background:'linear-gradient(135deg,var(--blue),var(--cyan))',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>PUMP</div>
       <div style={{fontFamily:'var(--font-mono)',fontSize:'.72rem',letterSpacing:'.4em',color:'var(--cyan)',marginTop:8}}>PUMP IT ON X1</div>

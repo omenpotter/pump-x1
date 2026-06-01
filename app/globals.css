@@ -54,8 +54,8 @@ body {
 @keyframes fadeUp { 0% { opacity:0; transform:translateY(8px) } 100% { opacity:1; transform:translateY(0) } }
 @keyframes floatPill { 0%,100% { transform:translateY(0) rotate(-2deg) } 50% { transform:translateY(-12px) rotate(2deg) } }
 @keyframes cmPulse {
-  0%,100% { filter: drop-shadow(0 0 24px rgba(0,170,255,.7)) drop-shadow(0 0 48px rgba(0,170,255,.3)) }
-  50% { filter: drop-shadow(0 0 36px rgba(0,170,255,1)) drop-shadow(0 0 72px rgba(0,170,255,.5)) }
+  0%,100% { box-shadow: 0 0 24px rgba(0,170,255,.7), 0 0 48px rgba(0,170,255,.3); }
+  50%     { box-shadow: 0 0 36px rgba(0,170,255,1),  0 0 72px rgba(0,170,255,.5); }
 }
 @keyframes dpFloat { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-8px) } }
 @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }

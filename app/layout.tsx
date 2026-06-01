@@ -1,3 +1,4 @@
+import React from 'react'
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
@@ -139,12 +140,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://rpc.mainnet.x1.xyz" />
+        <link rel="dns-prefetch" href="https://rpc.mainnet.x1.xyz" />
+        <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap"
           rel="stylesheet"
+          media="print"
+          onLoad={"this.media='all'" as unknown as React.ReactEventHandler<HTMLLinkElement>}
         />
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" />
+        <noscript>
+          <link
+            href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap"
+            rel="stylesheet"
+          />
+        </noscript>
+        {/* defer so it doesn't block initial render — globe polls until THREE is ready */}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer />
         <style>{`#orb-canvas{width:520px;height:520px;max-width:88vw;display:block;}`}</style>
       </head>
       <body>

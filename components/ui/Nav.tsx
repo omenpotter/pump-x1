@@ -6,7 +6,7 @@ export default function Nav() {
   return (
     <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:500,padding:'0 5vw',height:68,display:'flex',alignItems:'center',justifyContent:'space-between',background:'linear-gradient(180deg,rgba(3,6,9,.96) 0%,transparent 100%)',borderBottom:'1px solid rgba(0,170,255,.07)',backdropFilter:'blur(14px)'}}>
       <Link href="/" style={{display:'flex',alignItems:'center',gap:10,textDecoration:'none'}}>
-        <Image src="/pump-token.png" alt="PUMP" width={32} height={32} style={{borderRadius:'50%',objectFit:'contain',filter:'drop-shadow(0 0 8px rgba(0,170,255,.8))'}}/>
+        <Image src="/pump-token-sm.png" alt="PUMP" width={32} height={32} style={{borderRadius:'50%',objectFit:'contain',filter:'drop-shadow(0 0 8px rgba(0,170,255,.8))'}}/>
         <span style={{fontFamily:'Bebas Neue,sans-serif',fontSize:'1.5rem',letterSpacing:'.2em',color:'#fff'}}>PUMP<span style={{color:'var(--cyan)'}}>.X1</span></span>
       </Link>
       <ul style={{display:'flex',gap:32,listStyle:'none'}}>
