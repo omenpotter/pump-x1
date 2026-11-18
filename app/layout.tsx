@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Analytics } from '@vercel/analytics/next'
+import Navbar from '@/components/Navbar'
+import SiteFooter from '@/components/SiteFooter'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -36,8 +38,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body>
-        {children}
+      <body className="platform">
+        <div className="noise" aria-hidden="true" />
+        <div className="scan" aria-hidden="true" />
+        <a className="skip-link" href="#main-content">Skip to content</a>
+        <Navbar />
+        <main id="main-content" tabIndex={-1}>{children}</main>
+        <SiteFooter />
         <Analytics />
       </body>
     </html>

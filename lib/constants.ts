@@ -10,6 +10,8 @@ export const TOKEN = {
   image: '/pump-token.png',
 } as const
 
+export const BUY_URL = `https://app.xdex.xyz/swap?fromTokenAddress=111111111111111111111111111111111111111111&toTokenAddress=${TOKEN.address}&ammConfigAddress=2eFPWosizV6nSAGeSvi5tRgXLoqhjnSesra23ALA248c`;
+
 export const SOCIALS = [
   { name: 'Twitter / X', icon: '✕', href: 'https://twitter.com' },
   { name: 'Telegram', icon: '✈', href: 'https://t.me' },

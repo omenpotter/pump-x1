@@ -6,7 +6,7 @@ export default function CopyBtn({ ca }: { ca: string }) {
   const [status, setStatus] = useState<'idle' | 'copied' | 'error'>('idle')
   const copied = status === 'copied'
   return (
-    <button type="button"
+    <button type="button" aria-label="Copy contract address"
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(ca)

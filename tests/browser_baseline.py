@@ -3,12 +3,59 @@ import json
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit
 
 from playwright.sync_api import expect, sync_playwright
 
 
 WIDTHS = (320, 360, 390, 480, 768, 1024, 1280, 1440, 1920, 2560)
+SCREENSHOT_WIDTHS = (390, 1440)
+
+
+def verify_page(page, route, heading, width, output):
+    expect(page.get_by_role("heading", name=heading, level=1)).to_be_visible()
+    expect(page.get_by_role("contentinfo")).to_be_visible()
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), f"Overflow on {route} at {width}px"
+    if width in SCREENSHOT_WIDTHS:
+        page.evaluate("scrollTo(0, 0)")
+        page.screenshot(path=output / f"{route}-{width}.png", full_page=True, animations="disabled")
+
+
+def verify_globe(playwright, url, output):
+    browser = playwright.chromium.launch(channel="msedge", args=["--use-gl=angle", "--use-angle=swiftshader"])
+    try:
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
+        page.route("https://**/*", lambda route: route.abort())
+        page.add_init_script("""
+          window.pumpGlobeDraws = 0;
+          for (const ctor of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) {
+            if (!ctor) continue;
+            for (const name of ['drawArrays', 'drawElements']) {
+              const original = ctor.prototype[name];
+              ctor.prototype[name] = function (...args) {
+                window.pumpGlobeDraws++;
+                return original.apply(this, args);
+              };
+            }
+          }
+        """)
+        page.goto(url)
+        globe = page.locator(".orb-visual")
+        expect(globe).to_have_attribute("data-globe", "ready", timeout=15000)
+        draws = page.evaluate("window.pumpGlobeDraws")
+        page.wait_for_function("previous => window.pumpGlobeDraws > previous", arg=draws)
+        globe.screenshot(path=output / "globe.png")
+
+        page.emulate_media(reduced_motion="reduce")
+        page.wait_for_timeout(350)
+        settled = page.evaluate("window.pumpGlobeDraws")
+        page.wait_for_timeout(300)
+        assert page.evaluate("window.pumpGlobeDraws") == settled, "Reduced motion should stop the WebGL render loop"
+        page.goto(urljoin(url, "/#market"))
+        expect(page).to_have_url(urljoin(url, "/market/"))
+        expect(page.get_by_role("heading", name="Price terminal", level=1)).to_be_visible()
+    finally:
+        browser.close()
 
 
 def capture(browser, url, width, output, offline_providers, replay):
@@ -17,6 +64,7 @@ def capture(browser, url, width, output, offline_providers, replay):
         device_scale_factor=1,
         has_touch=width < 768,
         reduced_motion="reduce",
+        permissions=["clipboard-read", "clipboard-write"],
     )
     if offline_providers or replay:
         target = urlsplit(url)
@@ -64,12 +112,22 @@ def capture(browser, url, width, output, offline_providers, replay):
     try:
         response = page.goto(url, wait_until="load", timeout=20000)
         assert response and response.ok, f"Unexpected navigation response at {width}px"
-        expect(page.get_by_role("heading", level=1)).to_be_visible()
-        expect(page.get_by_role("navigation", name="Main")).to_be_visible()
+        navigation = page.get_by_role("navigation", name="Main")
+        expect(navigation).to_be_visible()
         page.keyboard.press("Tab")
         expect(page.get_by_role("link", name="Skip to content")).to_be_focused()
         page.keyboard.press("Enter")
         expect(page.locator("main")).to_be_focused()
+        verify_page(page, "home", "PUMP IT ON X1", width, output)
+        expect(page.get_by_role("navigation", name="Explore PUMP")).to_be_visible()
+        expect(navigation.get_by_role("link", name="PUMP X1 home")).to_have_attribute("aria-current", "page")
+        page.evaluate("window.pumpNavigationDocument = true")
+
+        market = navigation.get_by_role("link", name="Market", exact=True)
+        market.click()
+        expect(page).to_have_url(urljoin(url, "/market/"))
+        expect(market).to_have_attribute("aria-current", "page")
+        verify_page(page, "market", "Price terminal", width, output)
         expect(page.get_by_role("heading", name="PUMP / XNT")).to_be_visible()
         expect(page.get_by_role("heading", name="Verified pool activity")).to_be_visible()
         expect(page.get_by_role("region", name="Verified pool swaps").get_by_role("row")).to_have_count(10)
@@ -82,16 +140,28 @@ def capture(browser, url, width, output, offline_providers, replay):
             )
         elif offline_providers:
             expect(page.get_by_text("Market data unavailable", exact=True)).to_be_visible()
-        containment = page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-        assert containment, f"Horizontal page overflow at {width}px"
         holders = page.get_by_role("button", name="Holders", exact=True)
         holders.click()
         expect(holders).to_have_attribute("aria-pressed", "true")
         transactions = page.get_by_role("button", name="Transactions", exact=True)
         transactions.click()
         expect(transactions).to_have_attribute("aria-pressed", "true")
-        page.evaluate("scrollTo(0, 0)")
-        page.screenshot(path=output / f"{width}.png", full_page=True, animations="disabled")
+        token = navigation.get_by_role("link", name="Token", exact=True)
+        token.click()
+        expect(page).to_have_url(urljoin(url, "/token/"))
+        expect(token).to_have_attribute("aria-current", "page")
+        verify_page(page, "token", "Contract details", width, output)
+        expect(page.get_by_text("Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Copy contract address").click()
+        expect(page.get_by_text("✓ Copied!", exact=True)).to_be_visible()
+
+        community = navigation.get_by_role("link", name="Community", exact=True)
+        community.click()
+        expect(page).to_have_url(urljoin(url, "/community/"))
+        expect(community).to_have_attribute("aria-current", "page")
+        verify_page(page, "community", "Join the movement", width, output)
+        expect(page.get_by_role("link", name="Telegram")).to_be_visible()
+        assert page.evaluate("window.pumpNavigationDocument === true"), "Navigation replaced the document"
         timings = None if replay else page.evaluate("""() => {
           const entry = performance.getEntriesByType('navigation')[0];
           return {
@@ -106,6 +176,7 @@ def capture(browser, url, width, output, offline_providers, replay):
         assert not errors, f"Browser errors at {width}px: {errors}"
         return {
             "width": width,
+            "routes": ["/", "/market/", "/token/", "/community/"],
             "offline_providers": offline_providers,
             "replayed_market_evidence": bool(replay),
             "timings": timings,
@@ -125,6 +196,7 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("docs/upgrade/evidence/browser-development"))
     parser.add_argument("--offline-providers", action="store_true", help="Verify layout while external provider requests are blocked")
     parser.add_argument("--replay-market-evidence", action="store_true", help="Replay captured, time-stamped X1 and XDEX responses")
+    parser.add_argument("--verify-globe", action="store_true", help="Also check WebGL rendering and reduced motion")
     args = parser.parse_args()
     replay = None
     if args.replay_market_evidence:
@@ -135,7 +207,9 @@ def main():
         }
     args.output.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(channel="msedge")
+        if args.verify_globe:
+            verify_globe(playwright, args.url, args.output)
+        browser = playwright.chromium.launch(channel="msedge", args=["--disable-webgl"])
         try:
             results = [capture(browser, args.url, width, args.output, args.offline_providers, replay) for width in WIDTHS]
         finally:
