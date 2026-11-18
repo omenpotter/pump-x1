@@ -6,7 +6,7 @@ import type { BufferGeometry, Material, Texture } from "three";
 
 const imagePath = "/pump-token.png";
 
-// Scene geometry and texture atlas from app/layout.tsx at b416cd55.
+// Original globe geometry and assets from app/layout.tsx at b416cd55.
 export default function OrbCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [ready, setReady] = useState(false);
@@ -33,22 +33,12 @@ export default function OrbCanvas() {
       atlas.height = 1024;
       const context = atlas.getContext("2d");
       if (!context) return;
-      context.fillStyle = "#010810";
+      context.fillStyle = "#060a13";
       context.fillRect(0, 0, atlas.width, atlas.height);
-      const tile = atlas.width / 4;
-      const padding = tile * .06;
-      for (let row = 0; row < 2; row++) {
-        for (let column = 0; column < 4; column++) {
-          const x = column * tile;
-          const y = row * tile;
-          const glow = context.createRadialGradient(x + tile / 2, y + tile / 2, 0, x + tile / 2, y + tile / 2, tile * .55);
-          glow.addColorStop(0, "rgba(0,100,255,.3)");
-          glow.addColorStop(1, "transparent");
-          context.fillStyle = glow;
-          context.fillRect(x, y, tile, tile);
-          context.drawImage(image, x + padding, y + padding / 2, tile - padding * 2, tile - padding);
-        }
-      }
+      const artworkSize = 960;
+      // The camera-facing meridian is u=.25 on SphereGeometry.
+      context.drawImage(image, atlas.width / 4 - artworkSize / 2,
+        (atlas.height - artworkSize) / 2, artworkSize, artworkSize);
 
       const renderer = new THREE.WebGLRenderer({ canvas: surface, alpha: true, antialias: true });
       dispose = () => renderer.dispose();
@@ -81,10 +71,10 @@ export default function OrbCanvas() {
       scene.add(key, rim, fill, back);
 
       const globe = new THREE.Mesh(new THREE.SphereGeometry(1, 80, 80), new THREE.MeshStandardMaterial({
-        map: texture, roughness: .05, metalness: .88, emissiveMap: texture,
-        emissive: 0x001133, emissiveIntensity: .32, envMap: reflection.texture, envMapIntensity: .34,
+        map: texture, roughness: .21, metalness: .52, emissiveMap: texture,
+        emissive: 0xffffff, emissiveIntensity: .18, envMap: reflection.texture, envMapIntensity: .12,
       }));
-      globe.rotation.set(Math.PI / 4, Math.PI / 4, 0);
+      globe.rotation.set(.05, -.07, 0);
       scene.add(globe);
 
       for (const [radius, color, opacity] of [[1.07, 0x0044bb, .12], [1.28, 0x002266, .045], [1.04, 0x0099ff, .16]]) {

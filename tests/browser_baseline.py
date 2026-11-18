@@ -28,6 +28,14 @@ def verify_globe(playwright, url, output):
         page.route("https://**/*", lambda route: route.abort())
         page.add_init_script("""
           window.pumpGlobeDraws = 0;
+          window.pumpArtworkDraws = 0;
+          const drawImage = CanvasRenderingContext2D.prototype.drawImage;
+          CanvasRenderingContext2D.prototype.drawImage = function (image, ...args) {
+            if (this.canvas.width === 2048 && this.canvas.height === 1024 && image.src?.endsWith('/pump-token.png')) {
+              window.pumpArtworkDraws++;
+            }
+            return drawImage.call(this, image, ...args);
+          };
           for (const ctor of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) {
             if (!ctor) continue;
             for (const name of ['drawArrays', 'drawElements']) {
@@ -42,6 +50,7 @@ def verify_globe(playwright, url, output):
         page.goto(url)
         globe = page.locator(".orb-visual")
         expect(globe).to_have_attribute("data-globe", "ready", timeout=15000)
+        assert page.evaluate("window.pumpArtworkDraws") == 1, "The atlas must draw the original artwork once"
         draws = page.evaluate("window.pumpGlobeDraws")
         page.wait_for_function("previous => window.pumpGlobeDraws > previous", arg=draws)
         globe.screenshot(path=output / "globe.png")
@@ -120,7 +129,8 @@ def capture(browser, url, width, output, offline_providers, replay):
         expect(page.locator("main")).to_be_focused()
         verify_page(page, "home", "PUMP IT ON X1", width, output)
         expect(page.get_by_role("navigation", name="Explore PUMP")).to_be_visible()
-        expect(navigation.get_by_role("link", name="PUMP X1 home")).to_have_attribute("aria-current", "page")
+        expect(navigation.locator("li a")).to_have_text(["Home", "Market", "Token", "Community"], use_inner_text=False)
+        expect(navigation.get_by_role("link", name="Home", exact=True)).to_have_attribute("aria-current", "page")
         page.evaluate("window.pumpNavigationDocument = true")
 
         market = navigation.get_by_role("link", name="Market", exact=True)
@@ -131,6 +141,19 @@ def capture(browser, url, width, output, offline_providers, replay):
         expect(page.get_by_role("heading", name="PUMP / XNT")).to_be_visible()
         expect(page.get_by_role("heading", name="Verified pool activity")).to_be_visible()
         expect(page.get_by_role("region", name="Verified pool swaps").get_by_role("row")).to_have_count(10)
+        chart = page.get_by_role("img", name="5m price and volume chart")
+        expect(chart).to_be_visible()
+        chart.press("ArrowLeft")
+        expect(page.get_by_role("status", name="Candle tooltip")).to_contain_text("Vol")
+        page.get_by_role("button", name="Zoom in").click()
+        expect(page.get_by_role("button", name="Zoom out")).to_be_enabled()
+        page.get_by_role("button", name="Reset", exact=True).click()
+        frames = page.get_by_role("group", name="Candle timeframe")
+        expect(frames.get_by_role("button")).to_have_text(["1m", "5m", "15m", "1H", "4H", "1D"])
+        frames.get_by_role("button", name="1D", exact=True).click()
+        expect(page.get_by_text("1D history unavailable", exact=False)).to_be_visible()
+        frames.get_by_role("button", name="5m", exact=True).click()
+        page.get_by_text("View candle values", exact=True).click()
         expect(page.get_by_role("region", name="Sample candle values").get_by_role("row")).to_have_count(3)
         if replay:
             expect(page.get_by_text("XDEX · delayed", exact=True)).to_be_visible()
@@ -151,6 +174,15 @@ def capture(browser, url, width, output, offline_providers, replay):
         expect(page).to_have_url(urljoin(url, "/token/"))
         expect(token).to_have_attribute("aria-current", "page")
         verify_page(page, "token", "Contract details", width, output)
+        contract = page.locator(".contract-grid")
+        expect(contract.locator("dd")).to_have_text([
+            "PUMP", "$PUMP", "Token-2022", "X1 Mainnet", "18,446,744,073.71", "9", "Disabled", "SVM / Solana-compat",
+        ])
+        columns = contract.evaluate("element => getComputedStyle(element).gridTemplateColumns.split(' ').length")
+        assert columns == (2 if width <= 720 else 4)
+        cells = contract.locator(":scope > div").evaluate_all("cells => cells.map(cell => [cell.offsetWidth, cell.offsetHeight])")
+        assert max(cell[0] for cell in cells) - min(cell[0] for cell in cells) <= 1
+        assert len({cell[1] for cell in cells}) == 1
         expect(page.get_by_text("Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C", exact=True)).to_be_visible()
         page.get_by_role("button", name="Copy contract address").click()
         expect(page.get_by_text("✓ Copied!", exact=True)).to_be_visible()

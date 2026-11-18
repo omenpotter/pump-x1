@@ -20,7 +20,7 @@ export default function MarketPage() {
       <div style={{ maxWidth:1380, margin:"0 auto" }}>
         <ScrollFade><div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".25em", color:"var(--blue)", textTransform:"uppercase", marginBottom:12, display:"flex", alignItems:"center", gap:10 }}><span style={{ color:"rgba(0,170,255,.3)", fontSize:".62rem" }}>{"//"}</span>Live Market</div></ScrollFade>
         <ScrollFade delay={80}><h1 style={{ fontFamily:"var(--font-bebas)", fontSize:"clamp(2.5rem,5vw,4.5rem)", color:"#fff", lineHeight:1, letterSpacing:".03em", marginBottom:18 }}>PRICE <span style={{ color:"var(--blue)" }}>TERMINAL</span></h1></ScrollFade>
-        <ScrollFade delay={160}><p style={{ fontSize:"1rem", color:"var(--text-dim)", maxWidth:540, lineHeight:1.8, marginBottom:56 }}>Real-time PUMP activity on X1 Mainnet. Simulated market feed — live data via xDEX when available.</p></ScrollFade>
+        <ScrollFade delay={160}><p style={{ fontSize:"1rem", color:"var(--text-dim)", maxWidth:540, lineHeight:1.8, marginBottom:56 }}>XDEX spot quotes and verified X1 pool trades.</p></ScrollFade>
         <div className="market-grid" style={{ display:"grid", gridTemplateColumns:"1fr 340px", gap:20, alignItems:"start" }}>
           <ScrollFade className="fade-left"><Chart /><PoolSample /></ScrollFade>
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>

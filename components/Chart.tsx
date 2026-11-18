@@ -57,7 +57,7 @@ export default function Chart() {
         <div><dt>Pool quote depth</dt><dd>{quote?.quoteDepthUsd ? `$${quote.quoteDepthUsd.toFixed(2)}` : unavailable}</dd></div>
         <div><dt>24h volume</dt><dd>{unavailable}</dd></div>
       </dl>
-      <div className="market-chart-empty">
+      <div className="market-quote-note">
         <div>
           <p>24-hour metrics require a complete trading window.</p>
           {quote && <p><a href={`https://explorer.mainnet.x1.xyz/address/${quote.pool}`} target="_blank" rel="noopener noreferrer">XDEX selected pool ↗</a>

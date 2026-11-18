@@ -22,7 +22,7 @@ export default function TokenPage() {
         <ScrollFade><div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".25em", color:"var(--blue)", textTransform:"uppercase", marginBottom:12, display:"flex", alignItems:"center", gap:10 }}><span style={{ color:"rgba(0,170,255,.3)" }}>{"//"}</span>Token Info</div></ScrollFade>
         <ScrollFade delay={80}><h1 style={{ fontFamily:"var(--font-bebas)", fontSize:"clamp(2.5rem,5vw,4.5rem)", color:"#fff", lineHeight:1, letterSpacing:".03em", marginBottom:40 }}>CONTRACT <span style={{ color:"var(--blue)" }}>DETAILS</span></h1></ScrollFade>
         <ScrollFade delay={160}>
-          <div className="ctr-clip" style={{ background:"var(--card)", border:"1px solid var(--border)", padding:"40px 48px", position:"relative", overflow:"hidden", maxWidth:860 }}>
+          <div className="ctr-clip contract-card">
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at top left,rgba(0,170,255,.05) 0%,transparent 60%)", pointerEvents:"none" }} />
             <div style={{ float:"right", width:88, height:88, borderRadius:"50%", overflow:"hidden", border:"2px solid rgba(0,170,255,.4)", filter:"drop-shadow(0 0 16px rgba(0,170,255,.7))", marginLeft:28, marginBottom:16, flexShrink:0 }}>
               <Image src="/pump-token.png" alt="PUMP" width={88} height={88} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
@@ -37,14 +37,14 @@ export default function TokenPage() {
               <a href="https://raw.githubusercontent.com/second2none-1/Pump/main/metadata.json" target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 18px", border:"1px solid rgba(0,170,255,.3)", color:"var(--blue)", fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".1em", background:"transparent", textDecoration:"none" }}>{"{ }"} Metadata</a>
               <a href="https://github.com/second2none-1/Pump" target="_blank" rel="noopener noreferrer" style={{ display:"inline-flex", alignItems:"center", gap:7, padding:"9px 18px", border:"1px solid rgba(0,170,255,.3)", color:"var(--blue)", fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".1em", background:"transparent", textDecoration:"none" }}>⌥ GitHub</a>
             </div>
-            <div className="contract-grid" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:1, background:"rgba(0,170,255,.06)", marginTop:32, border:"1px solid var(--border)" }}>
+            <dl className="contract-grid" aria-label="Contract information">
               {[["Name","PUMP"],["Symbol","$PUMP"],["Standard","Token-2022"],["Chain","X1 Mainnet"],["Supply","18,446,744,073.71"],["Decimals","9"],["Mint Auth","Disabled"],["VM","SVM / Solana-compat"]].map(([k,v])=>(
-                <div key={k} style={{ padding:"14px 18px", background:"rgba(5,13,22,.9)", display:"flex", flexDirection:"column", gap:4 }}>
-                  <div style={{ fontSize:".62rem", letterSpacing:".15em", textTransform:"uppercase", color:"var(--text-dim)" }}>{k}</div>
-                  <div style={{ fontFamily:"var(--font-mono)", fontSize:".8rem", color: k==="Mint Auth" ? "var(--blue)" : "#fff" }}>{v}</div>
+                <div key={k}>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
                 </div>
               ))}
-            </div>
+            </dl>
           </div>
         </ScrollFade>
       </div>

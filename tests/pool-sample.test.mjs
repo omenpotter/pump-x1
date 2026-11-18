@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { decodePool, parsePoolSwap, summarizePoolSample } from "../lib/pool-sample.ts";
+import { buildPoolCandles, CANDLE_TIMEFRAMES, decodePool, parsePoolSwap, summarizePoolSample } from "../lib/pool-sample.ts";
 
 const load = name => JSON.parse(readFileSync(new URL(`../docs/upgrade/evidence/${name}.json`, import.meta.url), "utf8").replace(/^\uFEFF/, ""));
 const poolAccount = load("x1-xdex-pool");
@@ -41,6 +41,20 @@ test("candles use verified prices and vault continuity, independent of transacti
   assert.equal(a[0].close, 52055806 / 122792599871547);
   assert.equal(a[1].open, a[1].close);
   assert.equal(a[0].xntAtoms + a[1].xntAtoms, 76784931921n);
+});
+
+test("timeframes reuse only observed swaps and leave an unsupported daily timeframe empty", () => {
+  const { trades, xntVolumeAtoms } = summarizePoolSample(poolAccount, signatures, transactions);
+  assert.deepEqual(CANDLE_TIMEFRAMES.map(frame => frame.label), ["1m", "5m", "15m", "1H", "4H", "1D"]);
+  for (const { seconds } of CANDLE_TIMEFRAMES.slice(0, -1)) {
+    const candles = buildPoolCandles(trades, seconds);
+    assert.ok(candles.length >= 2);
+    assert.ok(candles[0].partial && candles.at(-1).partial);
+    assert.ok(candles.some((candle, index) => index > 0 && candle.time - candles[index - 1].time > seconds));
+    assert.ok(candles.every(candle => candle.time % seconds === 0));
+    assert.equal(candles.reduce((sum, candle) => sum + candle.xntAtoms, 0n), xntVolumeAtoms);
+  }
+  assert.deepEqual(buildPoolCandles(trades, 86400), []);
 });
 
 test("a mismatched vault balance invalidates a swap", () => {

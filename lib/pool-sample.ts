@@ -135,23 +135,28 @@ export function parsePoolSwap(response: unknown, pool: Pool, expected: RecordVal
   };
 }
 
-export function summarizePoolSample(poolResponse: unknown, signatureResponse: unknown, transactions: unknown) {
-  const pool = decodePool(poolResponse);
-  if (!pool) return null;
-  const window = list(record(signatureResponse).result).map(record);
-  const rows = list(transactions).flatMap(response => {
-    const signature = list(record(record(record(response).result).transaction).signatures)[0];
-    const expected = window.find(entry => entry.signature === signature);
-    const row = expected ? parsePoolSwap(response, pool, expected) : null;
-    return row ? [row] : [];
-  });
-  const trades = [...new Map(rows.map(row => [row.signature, row])).values()];
+type VerifiedSwap = NonNullable<ReturnType<typeof parsePoolSwap>>;
+
+export const CANDLE_TIMEFRAMES = [
+  { label: "1m", seconds: 60 },
+  { label: "5m", seconds: 300 },
+  { label: "15m", seconds: 900 },
+  { label: "1H", seconds: 3600 },
+  { label: "4H", seconds: 14400 },
+  { label: "1D", seconds: 86400 },
+] as const;
+
+export function buildPoolCandles(trades: VerifiedSwap[], seconds: number) {
+  const from = Math.min(...trades.map(row => row.time));
+  const to = Math.max(...trades.map(row => row.time));
+  if (!trades.length || !Number.isSafeInteger(seconds) || seconds <= 0 || to - from < seconds) return [];
+
   const buckets = new Map<number, typeof trades>();
   for (const row of trades) {
-    const time = Math.floor(row.time / 300) * 300;
+    const time = Math.floor(row.time / seconds) * seconds;
     buckets.set(time, [...(buckets.get(time) ?? []), row]);
   }
-  const candles = [...buckets].sort(([a], [b]) => a - b).flatMap(([time, rows]) => {
+  return [...buckets].sort(([a], [b]) => a - b).flatMap(([time, rows]) => {
     const remaining = [...rows];
     const ordered: typeof trades = [];
     while (remaining.length) {
@@ -165,11 +170,25 @@ export function summarizePoolSample(poolResponse: unknown, signatureResponse: un
     const prices = ordered.map(row => row.price);
     return [{
       time, open: prices[0], high: Math.max(...prices), low: Math.min(...prices), close: prices[prices.length - 1],
+      partial: time < from || time + seconds > to,
       xntAtoms: ordered.reduce((total, row) => total + row.xntAtoms, BigInt(0)),
     }];
   });
+}
+
+export function summarizePoolSample(poolResponse: unknown, signatureResponse: unknown, transactions: unknown) {
+  const pool = decodePool(poolResponse);
+  if (!pool) return null;
+  const window = list(record(signatureResponse).result).map(record);
+  const rows = list(transactions).flatMap(response => {
+    const signature = list(record(record(record(response).result).transaction).signatures)[0];
+    const expected = window.find(entry => entry.signature === signature);
+    const row = expected ? parsePoolSwap(response, pool, expected) : null;
+    return row ? [row] : [];
+  });
+  const trades = [...new Map(rows.map(row => [row.signature, row])).values()];
   return {
-    pool, trades: trades.sort((a, b) => b.slot - a.slot), candles,
+    pool, trades: trades.sort((a, b) => b.slot - a.slot), candles: buildPoolCandles(trades, 300),
     signatureCount: window.length,
     successfulCount: window.filter(row => row.err === null).length,
     xntVolumeAtoms: trades.reduce((total, row) => total + row.xntAtoms, BigInt(0)),

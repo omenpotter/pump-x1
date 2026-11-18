@@ -4,6 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+const tabs = [
+  { path: "/", label: "Home" },
+  { path: "/market", label: "Market" },
+  { path: "/token", label: "Token" },
+  { path: "/community", label: "Community" },
+];
+
 export default function Navbar() {
   const current = usePathname().replace(/\/$/, "") || "/";
   return (
@@ -14,7 +21,7 @@ export default function Navbar() {
       background: "linear-gradient(180deg,rgba(3,6,9,.96) 0%,transparent 100%)",
       borderBottom: "1px solid rgba(0,170,255,.07)", backdropFilter: "blur(14px)",
     }}>
-      <Link href="/" aria-label="PUMP X1 home" aria-current={current === "/" ? "page" : undefined}
+      <Link href="/" aria-label="PUMP X1 home"
         style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
         <Image src="/pump-token.png" alt="PUMP" width={32} height={32}
           style={{ borderRadius: "50%", objectFit: "contain", filter: "drop-shadow(0 0 8px rgba(0,170,255,.8))" }} />
@@ -23,10 +30,10 @@ export default function Navbar() {
         </span>
       </Link>
       <ul className="site-nav__links" style={{ display: "flex", listStyle: "none" }}>
-        {["market","token","community"].map(id => (
-          <li key={id}>
-            <Link href={`/${id}/`} aria-current={current === `/${id}` ? "page" : undefined}>
-              {id[0].toUpperCase() + id.slice(1)}
+        {tabs.map(({ path, label }) => (
+          <li key={path}>
+            <Link href={path === "/" ? path : `${path}/`} aria-current={current === path ? "page" : undefined}>
+              {label}
             </Link>
           </li>
         ))}
