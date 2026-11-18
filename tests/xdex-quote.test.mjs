@@ -1,13 +1,22 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { getQuoteUrl, parsePumpQuote, QUOTE_MAX_AGE_MS } from "../lib/xdex-quote.ts";
+import { getQuoteUrl, parsePumpQuote, QUOTE_LAST_KNOWN_MS, QUOTE_MAX_AGE_MS } from "../lib/xdex-quote.ts";
 
 const pump = "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C";
 const xnt = "XNMbEwZFFBKQhqyW3taa8cAUp1xBUHfyzRFJQvZET4m";
 
 const captured = JSON.parse(readFileSync(new URL("../docs/upgrade/evidence/xdex-paired-quote.json", import.meta.url), "utf8").replace(/^\uFEFF/, ""));
 const observationTime = captured.data.find(entry => entry.token_address === pump).observedTimestamp;
+
+test("an aged verified quote is eligible only as delayed and expires after the fallback limit", () => {
+  const when = observationTime + QUOTE_MAX_AGE_MS + 1;
+  assert.equal(parsePumpQuote(captured, pump, when), null);
+  const lastKnown = parsePumpQuote(captured, pump, when, QUOTE_LAST_KNOWN_MS);
+  assert.equal(lastKnown.observedAt, observationTime);
+  assert.equal(lastKnown.delayed, true);
+  assert.equal(parsePumpQuote(captured, pump, observationTime + QUOTE_LAST_KNOWN_MS + 1, QUOTE_LAST_KNOWN_MS), null);
+});
 
 test("captured XDEX quote uses the reported native XNT conversion and selected pool", () => {
   const quote = parsePumpQuote(captured, pump, observationTime + 1255);

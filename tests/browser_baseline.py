@@ -3,7 +3,7 @@ import json
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import parse_qs, urljoin, urlsplit
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -75,6 +75,7 @@ def capture(browser, url, width, output, offline_providers, replay):
         reduced_motion="reduce",
         permissions=["clipboard-read", "clipboard-write"],
     )
+    quote_available = True
     if offline_providers or replay:
         target = urlsplit(url)
 
@@ -82,19 +83,15 @@ def capture(browser, url, width, output, offline_providers, replay):
             request = urlsplit(route.request.url)
             local = (request.scheme, request.netloc) == (target.scheme, target.netloc)
             if replay and local and request.path.rstrip("/") == "/api/xdex":
-                route.fulfill(json=replay["quote"])
-            elif replay and request.hostname == "rpc.mainnet.x1.xyz":
-                cors = {
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": "content-type",
-                    "Access-Control-Allow-Methods": "POST, OPTIONS",
-                }
-                if route.request.method == "OPTIONS":
-                    route.fulfill(status=204, headers=cors)
-                elif route.request.method == "POST" and (route.request.post_data_json or {}).get("method") == "getAccountInfo":
-                    route.fulfill(json=replay["mint"], headers=cors)
+                if quote_available:
+                    route.fulfill(json=replay["quote"])
                 else:
-                    route.abort()
+                    route.fulfill(status=502, json={"error": "Quote service unavailable"})
+            elif replay and local and request.path.rstrip("/") == "/api/x1":
+                if parse_qs(request.query).get("kind") == ["mint"]:
+                    route.fulfill(json=replay["mint"]["result"])
+                else:
+                    route.fulfill(status=502, json={"error": "X1 data unavailable"})
             elif local:
                 route.continue_()
             else:
@@ -157,10 +154,16 @@ def capture(browser, url, width, output, offline_providers, replay):
         expect(page.get_by_role("region", name="Sample candle values").get_by_role("row")).to_have_count(3)
         if replay:
             expect(page.get_by_text("XDEX · delayed", exact=True)).to_be_visible()
+            expect(page.get_by_text("$0.000000076637409", exact=True)).to_be_visible()
             expect(page.get_by_text("18444229684.271747299 PUMP", exact=True)).to_be_visible()
             expect(page.get_by_role("link", name="XDEX selected pool")).to_have_attribute(
                 "href", "https://explorer.mainnet.x1.xyz/address/" + replay["quote"]["data"][0]["selected_pool"]
             )
+            if width == 390:
+                quote_available = False
+                page.evaluate("window.dispatchEvent(new Event('online'))")
+                expect(page.get_by_text("Last verified quote · delayed", exact=True)).to_be_visible()
+                expect(page.get_by_text("$0.000000076637409", exact=True)).to_be_visible()
         elif offline_providers:
             expect(page.get_by_text("Market data unavailable", exact=True)).to_be_visible()
         holders = page.get_by_role("button", name="Holders", exact=True)

@@ -2,12 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { TOKEN } from "@/lib/constants";
-import { parseActivity, parseHolders, parseMint, readX1, TOKEN_2022 } from "@/lib/chain-data";
+import { parseActivity, parseHolders, parseMint } from "@/lib/chain-data";
+import { refreshVisible } from "@/lib/market-refresh";
 
 type ReadState<T> = { status: "loading" | "unavailable" } | { status: "ready"; value: T };
 type Holders = ReturnType<typeof parseHolders>;
 const explorer = "https://explorer.mainnet.x1.xyz";
-const finalized = { commitment: "finalized" };
+async function read(kind: "mint" | "activity" | "holders", signal: AbortSignal) {
+  const response = await fetch(`/api/x1/?kind=${kind}`, {
+    signal: AbortSignal.any([signal, AbortSignal.timeout(14000)]),
+  });
+  if (!response.ok) throw new Error("X1 unavailable");
+  return response.json();
+}
 
 export default function TradeFeed() {
   const [mode, setMode] = useState<"activity" | "holders">("activity");
@@ -16,37 +23,31 @@ export default function TradeFeed() {
   const [activityState, setActivityState] = useState<ReadState<ReturnType<typeof parseActivity>>>({ status: "loading" });
   const [holders, setHolders] = useState<Holders>();
   const [holderError, setHolderError] = useState(false);
+  const [delayed, setDelayed] = useState(false);
   const mint = mintState.status === "ready" ? mintState.value : undefined;
   const activity = activityState.status === "ready" ? activityState.value : undefined;
 
-  useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
-    readX1("getAccountInfo", [TOKEN.address, { ...finalized, encoding: "jsonParsed" }], signal).then(account => {
-      if (!signal.aborted) setMintState({ status: "ready", value: parseMint(account, TOKEN.address) });
-    }).catch(() => {
-      if (!signal.aborted) setMintState({ status: "unavailable" });
-    });
-    readX1("getSignaturesForAddress", [TOKEN.address, { ...finalized, limit: 25 }], signal).then(signatures => {
-      if (!signal.aborted) setActivityState({ status: "ready", value: parseActivity(signatures) });
-    }).catch(() => {
-      if (!signal.aborted) setActivityState({ status: "unavailable" });
-    });
-    return () => controller.abort();
-  }, [request]);
+  useEffect(() => refreshVisible(async signal => {
+    const [mintResult, activityResult] = await Promise.allSettled([
+      read("mint", signal).then(account => parseMint(account, TOKEN.address)),
+      read("activity", signal).then(parseActivity),
+    ]);
+    if (signal.aborted) return;
+    setMintState(previous => mintResult.status === "fulfilled" ? { status: "ready", value: mintResult.value } :
+      previous.status === "ready" ? previous : { status: "unavailable" });
+    setActivityState(previous => activityResult.status === "fulfilled" ? { status: "ready", value: activityResult.value } :
+      previous.status === "ready" ? previous : { status: "unavailable" });
+    if (mintResult.status === "rejected" || activityResult.status === "rejected") throw new Error("X1 refresh incomplete");
+    setDelayed(false);
+  }, () => setDelayed(true), 45_000), [request]);
 
   useEffect(() => {
     if (mode !== "holders" || !mint || holders) return;
     const controller = new AbortController();
     const { signal } = controller;
-    readX1("getProgramAccounts", [TOKEN_2022, {
-      ...finalized,
-      encoding: "jsonParsed",
-      withContext: true,
-      minContextSlot: mint.slot,
-      filters: [{ memcmp: { offset: 0, bytes: TOKEN.address } }],
-    }], signal).then(data => {
-      if (!signal.aborted) setHolders(parseHolders(data, TOKEN.address, mint.decimals));
+    read("holders", signal).then((data: Holders) => {
+      if (!data || !Number.isSafeInteger(data.slot) || !Array.isArray(data.top)) throw new Error("Invalid holder snapshot");
+      if (!signal.aborted) setHolders(data);
     }).catch(() => {
       if (!signal.aborted) setHolderError(true);
     });
@@ -75,6 +76,7 @@ export default function TradeFeed() {
           disabled={mintState.status === "loading" || activityState.status === "loading"}>Refresh</button>
       </div>
       <div className="market-panel__body">
+        {delayed && (mint || activity) && <p role="status">X1 refresh delayed. Available entries are from the last successful response.</p>}
         {mint && <p className="market-panel__summary"><strong>{mint.supply} PUMP</strong> on-chain supply · slot {mint.slot}</p>}
         {!mint && <p role="status">{mintState.status === "loading" ? "Loading finalized mint supply…" : "Mint supply is unavailable."}</p>}
         {mode === "activity" && !activity && <p role="status">

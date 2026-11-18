@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { formatTokenPrice } from "@/lib/market-format";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 type Candle = {
@@ -14,17 +15,17 @@ type Candle = {
   volumeText: string;
 };
 
-type Series = { label: string; seconds: number; candles: Candle[] };
+export type Series = { label: string; seconds: number; candles: Candle[] };
 type Cursor = { time: number; y?: number };
 const height = 336;
 const priceBottom = 221;
 const volumeBottom = 299;
 const padding = 12;
 const utc = (time: number) => new Date(time * 1000).toISOString().slice(0, 16).replace("T", " ");
-const price = (value: number) => value.toPrecision(6);
+const price = formatTokenPrice;
 
 function plotRight(width: number) {
-  return width - (width < 480 ? 69 : 94);
+  return width - (width < 480 ? 91 : 116);
 }
 
 export default function HistoricalCandles({ series }: { series: Series[] }) {
@@ -93,11 +94,11 @@ export default function HistoricalCandles({ series }: { series: Series[] }) {
       const level = maximum - index / 4 * (maximum - minimum);
       const position = y(level);
       line(padding, position, right, position);
-      context.fillText(width < 480 ? level.toPrecision(4) : price(level), right + 7, position + 4);
+      context.fillText(price(level), right + 7, position + 4, width - right - 10);
     }
     line(padding, volumeBottom + 5, right, volumeBottom + 5);
     context.fillText("XNT volume", padding + 2, 245);
-    context.fillText(`${maxVolume.toPrecision(3)}`, right + 7, 261);
+    context.fillText(price(maxVolume), right + 7, 261, width - right - 10);
     const ticks = width < 450 ? 2 : 3;
     for (let index = 0; index < ticks; index++) {
       const at = index / (ticks - 1);

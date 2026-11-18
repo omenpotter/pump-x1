@@ -80,7 +80,7 @@ export function parseHolders(value: unknown, mint: string, decimals: number) {
 }
 
 export async function readX1(
-  method: "getAccountInfo" | "getSignaturesForAddress" | "getProgramAccounts",
+  method: "getAccountInfo" | "getSignaturesForAddress" | "getProgramAccounts" | "getTransaction",
   params: unknown[],
   signal: AbortSignal,
 ) {

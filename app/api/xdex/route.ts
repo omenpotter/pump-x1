@@ -1,21 +1,24 @@
 import { NextResponse } from "next/server";
 import { TOKEN } from "@/lib/constants";
-import { getQuoteUrl, XNT_MINT } from "@/lib/xdex-quote";
+import { getQuoteUrl, parsePumpQuote, QUOTE_LAST_KNOWN_MS, XNT_MINT } from "@/lib/xdex-quote";
 
 function error(message: string, status: number) {
-  return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json({ error: message }, {
+    status, headers: { "Cache-Control": "no-store", ...(status >= 500 ? { "Retry-After": "5" } : {}) },
+  });
 }
 
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const upstream = getQuoteUrl(params, TOKEN.address, XNT_MINT);
   if (!upstream) return error("Invalid quote request", 400);
+  const timeout = AbortSignal.timeout(7000);
   try {
     const response = await fetch(upstream, {
       headers: { Accept: "application/json" },
       redirect: "error",
-      signal: AbortSignal.timeout(6000),
-      next: { revalidate: 30 },
+      signal: timeout,
+      cache: "no-store",
     });
     if (!response.ok || !response.headers.get("content-type")?.includes("application/json") || !response.body) {
       return error("Quote service unavailable", 502);
@@ -34,10 +37,15 @@ export async function GET(request: Request) {
       }
       payload += decoder.decode(value, { stream: true });
     }
-    return NextResponse.json(JSON.parse(payload + decoder.decode()), {
-      headers: { "Cache-Control": "s-maxage=30, stale-while-revalidate=30" },
+    const quote = JSON.parse(payload + decoder.decode());
+    if (quote?.success !== true || (upstream.pathname.endsWith("/prices") &&
+      !parsePumpQuote(quote, TOKEN.address, Date.now(), QUOTE_LAST_KNOWN_MS))) {
+      return error("Quote service returned no verified price", 502);
+    }
+    return NextResponse.json(quote, {
+      headers: { "Cache-Control": "public, max-age=0, s-maxage=20" },
     });
   } catch {
-    return error("Quote service unavailable", 502);
+    return timeout.aborted ? error("Quote service timed out", 504) : error("Quote service unavailable", 502);
   }
 }
