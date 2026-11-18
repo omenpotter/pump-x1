@@ -1,0 +1,116 @@
+﻿{
+    "success":  true,
+    "data":  [
+                 {
+                     "token_address":  "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C",
+                     "price":  7.6637409E-08,
+                     "price_raw":  "76637409",
+                     "price_scale":  "1000000000000000",
+                     "selected_pool":  "J9iYHaqqgBt2AM4mmri45ccBcTbfUXi9bE3sW5CsdhAj",
+                     "reference_pool":  "CAJeVEoSm1QQZccnCqYu9cnNF7TTD2fcUA3E5HQoxRvR",
+                     "xnt_usd_price":  0.18075281746158,
+                     "candidates":  [
+                                        {
+                                            "pool":  "FzrhpvaUKEHa4TSkY2MbJ4vJwz52JVw2bpLiUuntyCCf",
+                                            "price":  9.668807E-09,
+                                            "price_raw":  "9668807",
+                                            "token_reserve":  "9482710712298",
+                                            "quote_reserve":  "507248",
+                                            "quote":  "XNT",
+                                            "quote_is_xnt":  true,
+                                            "usd_depth":  0.000091,
+                                            "usd_depth_atoms":  "91"
+                                        },
+                                        {
+                                            "pool":  "J9iYHaqqgBt2AM4mmri45ccBcTbfUXi9bE3sW5CsdhAj",
+                                            "price":  7.6637409E-08,
+                                            "price_raw":  "76637409",
+                                            "token_reserve":  "503578552313567688",
+                                            "quote_reserve":  "213512333268",
+                                            "quote":  "XNT",
+                                            "quote_is_xnt":  true,
+                                            "usd_depth":  38.592955,
+                                            "usd_depth_atoms":  "38592955"
+                                        }
+                                    ],
+                     "usd_depth":  38.592955,
+                     "usd_depth_atoms":  "38592955",
+                     "quote_is_xnt":  true,
+                     "eligible":  true,
+                     "best_pool_usd_depth":  38.592955,
+                     "depth_threshold_usd":  0,
+                     "pool_observed_at":  1794995372,
+                     "network":  "X1 Mainnet",
+                     "source":  "metis_reserves",
+                     "status":  "ok",
+                     "updatedAt":  "2026-11-18T09:49:32.000Z",
+                     "observedTimestamp":  1794995372000,
+                     "ageMs":  1255,
+                     "refreshTargetMs":  1000,
+                     "targetMet":  false,
+                     "freshness":  "delayed",
+                     "price_currency":  "USD"
+                 },
+                 {
+                     "token_address":  "XNMbEwZFFBKQhqyW3taa8cAUp1xBUHfyzRFJQvZET4m",
+                     "price":  0.000717089098466,
+                     "price_raw":  "717089098466",
+                     "price_scale":  "1000000000000000",
+                     "selected_pool":  "8EUkm5ChdmLm9pxKX3Q99APck1URfVqP9m9R3FQcP6Tb",
+                     "reference_pool":  "CAJeVEoSm1QQZccnCqYu9cnNF7TTD2fcUA3E5HQoxRvR",
+                     "xnt_usd_price":  0.18075281746158,
+                     "candidates":  [
+                                        {
+                                            "pool":  "42L71tiJR69Y8jDx9jGCivoxMkyS22LVAANeRS7smH5R",
+                                            "price":  0.000718046132889,
+                                            "price_raw":  "718046132889",
+                                            "token_reserve":  "524264381963692",
+                                            "quote_reserve":  "2082656399869",
+                                            "quote":  "XNT",
+                                            "quote_is_xnt":  true,
+                                            "usd_depth":  376.446012,
+                                            "usd_depth_atoms":  "376446012"
+                                        },
+                                        {
+                                            "pool":  "8EUkm5ChdmLm9pxKX3Q99APck1URfVqP9m9R3FQcP6Tb",
+                                            "price":  0.000717089098466,
+                                            "price_raw":  "717089098466",
+                                            "token_reserve":  "1150318101654552",
+                                            "quote_reserve":  "4563583472995",
+                                            "quote":  "XNT",
+                                            "quote_is_xnt":  true,
+                                            "usd_depth":  824.88057,
+                                            "usd_depth_atoms":  "824880570"
+                                        },
+                                        {
+                                            "pool":  "BRAtdfhg1vJgw8wNnrBsivYByKQk6J5Q7KzTV4hNDPkQ",
+                                            "price":  0.000689691147916,
+                                            "price_raw":  "689691147916",
+                                            "token_reserve":  "329631604939",
+                                            "quote_reserve":  "227344",
+                                            "quote":  "USDC.X",
+                                            "quote_is_xnt":  false,
+                                            "usd_depth":  0.227344,
+                                            "usd_depth_atoms":  "227344"
+                                        }
+                                    ],
+                     "usd_depth":  824.88057,
+                     "usd_depth_atoms":  "824880570",
+                     "quote_is_xnt":  true,
+                     "eligible":  true,
+                     "best_pool_usd_depth":  824.88057,
+                     "depth_threshold_usd":  0,
+                     "pool_observed_at":  1794995372,
+                     "network":  "X1 Mainnet",
+                     "source":  "metis_reserves",
+                     "status":  "ok",
+                     "updatedAt":  "2026-11-18T09:49:32.000Z",
+                     "observedTimestamp":  1794995372000,
+                     "ageMs":  1255,
+                     "refreshTargetMs":  1000,
+                     "targetMet":  false,
+                     "freshness":  "delayed",
+                     "price_currency":  "USD"
+                 }
+             ]
+}

@@ -1,10 +1,9 @@
-"use client";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Navbar() {
   return (
-    <nav style={{
+    <nav aria-label="Main" className="site-nav" style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 500,
       padding: "0 5vw", height: 68,
       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -18,20 +17,17 @@ export default function Navbar() {
           PUMP<span style={{ color: "var(--cyan)" }}>.X1</span>
         </span>
       </Link>
-      <ul style={{ display: "flex", gap: 32, listStyle: "none" }}>
+      <ul className="site-nav__links" style={{ display: "flex", listStyle: "none" }}>
         {["market","token","community"].map(id => (
           <li key={id}>
-            <a href={`#${id}`} style={{ fontSize: ".74rem", letterSpacing: ".18em", textTransform: "uppercase",
-              color: "var(--text-dim)", textDecoration: "none", fontWeight: 600, transition: "color .25s" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "var(--blue)")}
-              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-dim)")}>
+            <a href={`#${id}`}>
               {id}
             </a>
           </li>
         ))}
       </ul>
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: ".7rem", color: "var(--text-dim)", display: "flex", alignItems: "center", gap: 8 }}>
-        <div className="blink-dot" />X1 MAINNET · LIVE
+      <div className="site-nav__network">
+        <span aria-hidden="true" />X1 MAINNET
       </div>
     </nav>
   );

@@ -4,13 +4,14 @@ import { useEffect, useRef } from "react";
 export default function TokenomicsCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    const c = ref.current!;
-    const ctx = c.getContext("2d")!;
-    const resize = () => { c.width = c.clientWidth; c.height = c.clientHeight; };
-    resize(); window.addEventListener("resize", resize);
-    let prog = 0;
+    const c = ref.current;
+    const ctx = c?.getContext("2d");
+    if (!c || !ctx) return;
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    let prog = motion.matches ? 1 : 0;
     const pImg = new Image(); pImg.src = "/pump-token.png";
-    let raf: number;
+    let raf = 0;
+    let visible = false;
     const draw = () => {
       const W = c.width, H = c.height, cx = W / 2, cy = H / 2;
       const r = Math.min(W, H) * .36, thick = Math.min(W, H) * .1;
@@ -42,10 +43,35 @@ export default function TokenomicsCanvas() {
       ctx.fillStyle = "rgba(0,200,255,.7)"; ctx.font = `${Math.min(W, H) * .042}px DM Mono,monospace`;
       ctx.fillText("COMMUNITY", cx, cy + Math.min(W, H) * .09);
       if (prog < 1) prog += .007;
-      raf = requestAnimationFrame(draw);
+      if (visible && !document.hidden && !motion.matches) raf = requestAnimationFrame(draw);
     };
-    draw();
-    return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(raf); };
+    const update = () => {
+      cancelAnimationFrame(raf);
+      if (motion.matches) prog = 1;
+      if (visible && !document.hidden) raf = requestAnimationFrame(draw);
+    };
+    const resize = new ResizeObserver(() => {
+      c.width = c.clientWidth;
+      c.height = c.clientHeight;
+      update();
+    });
+    resize.observe(c);
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      update();
+    });
+    observer.observe(c);
+    pImg.onload = update;
+    motion.addEventListener("change", update);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      resize.disconnect();
+      observer.disconnect();
+      pImg.onload = null;
+      motion.removeEventListener("change", update);
+      document.removeEventListener("visibilitychange", update);
+      cancelAnimationFrame(raf);
+    };
   }, []);
-  return <canvas ref={ref} style={{ width: "100%", maxWidth: 460, height: 460, display: "block", margin: "0 auto" }} />;
+  return <canvas ref={ref} aria-hidden="true" className="tokenomics-canvas" />;
 }

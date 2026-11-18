@@ -16,7 +16,7 @@ export default function HeroBackground() {
       ctx.clearRect(0,0,W,H)
       const hz=H*.52; ctx.strokeStyle='rgba(0,130,255,0.045)'; ctx.lineWidth=1
       for(let r=0;r<=18;r++){const z=r/18,y=hz+z*H*.6,xs=(1-z*.88)*W;ctx.beginPath();ctx.moveTo(W/2-xs/2,y);ctx.lineTo(W/2+xs/2,y);ctx.stroke()}
-      for(let col=-14;col<=14;col++){ctx.beginPath();for(let r=0;r<=18;r++){const z=r/18,xs=1-z*.88,px=W/2+col*(W/28)*xs,py=hz+z*H*.6;r===0?ctx.moveTo(px,py):ctx.lineTo(px,py)}ctx.stroke()}
+      for(let col=-14;col<=14;col++){ctx.beginPath();for(let r=0;r<=18;r++){const z=r/18,xs=1-z*.88,px=W/2+col*(W/28)*xs,py=hz+z*H*.6;if(r===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.stroke()}
       const t=Date.now()*.0004,lx=W/2+Math.sin(t*.6)*W*.35
       const g=ctx.createRadialGradient(lx,H*.28,0,lx,H*.28,W*.45)
       g.addColorStop(0,'rgba(0,100,255,.05)');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)

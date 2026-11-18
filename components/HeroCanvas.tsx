@@ -4,8 +4,9 @@ import { useEffect, useRef } from "react";
 export default function HeroCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
-    const c = ref.current!;
-    const ctx = c.getContext("2d")!;
+    const c = ref.current;
+    const ctx = c?.getContext("2d");
+    if (!c || !ctx || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let W = 0, H = 0;
     const resize = () => { W = c.width = c.offsetWidth; H = c.height = c.offsetHeight; };
     resize();
@@ -19,7 +20,8 @@ export default function HeroCanvas() {
     const onMove = (e: MouseEvent) => { omx = e.clientX / innerWidth - .5; omy = e.clientY / innerHeight - .5; };
     document.addEventListener("mousemove", onMove);
     const fov = 380;
-    let raf: number;
+    let raf = 0;
+    let visible = false;
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
       const hz = H * .52;
@@ -33,7 +35,8 @@ export default function HeroCanvas() {
         for (let r = 0; r <= 18; r++) {
           const z = r / 18; const xs = 1 - z * .88;
           const px = W / 2 + col * (W / 28) * xs; const py = hz + z * H * .6;
-          r === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+          if (r === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
         }
         ctx.stroke();
       }
@@ -53,8 +56,23 @@ export default function HeroCanvas() {
       });
       raf = requestAnimationFrame(draw);
     };
-    draw();
-    return () => { window.removeEventListener("resize", resize); document.removeEventListener("mousemove", onMove); cancelAnimationFrame(raf); };
+    const update = () => {
+      cancelAnimationFrame(raf);
+      if (visible && !document.hidden) raf = requestAnimationFrame(draw);
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      update();
+    });
+    observer.observe(c);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", resize);
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("visibilitychange", update);
+      cancelAnimationFrame(raf);
+    };
   }, []);
-  return <canvas ref={ref} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }} />;
+  return <canvas ref={ref} aria-hidden="true" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }} />;
 }

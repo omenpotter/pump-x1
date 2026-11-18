@@ -1,0 +1,21 @@
+﻿{
+    "jsonrpc":  "2.0",
+    "result":  {
+                   "context":  {
+                                   "apiVersion":  "4.0.4",
+                                   "slot":  94131510
+                               },
+                   "value":  {
+                                 "data":  [
+                                              "9+3j9dfD3kYYZnIUGpH6fC7Hx+EJQIh0+54i005Yhsm3xx/tyHGf/ThfXtNXR+yhAfGitiz/4TFgGN/GHgZ/lPZYB+knCOjq/5LztarUVWJrsROkayk0UfVVDA8xomi1I+hIwjDQdkdVvFIJHtvoXCjqT/zPpwuIInOOq2ndLhwKOPh5NhqQicVjn+6h5/dfoziFmI6xoideCeTGqkklAZWOjkt5+74ABd5ywH0FjVpLGPJX6k5MgGiaIVhWKNW/UDwFdlr+4wUGm4hX/quBhPtof2NGGMA12sQ53BrrO1WYoPAAAAAAAQbd9uHudY/eGEJdvORszdq2GvxNg7kNJ/69+SjYoYv8Bt324ddloZPZy+FGzut5rBy0he1fWzeROoz1hX7/AKkeHJAsnz8CU390vspNrBXStgBIGvEQIohn4i+H4UHZv/8ACQkJ6UDUv4IgAQCHiWhPhMJGAMVIWEYAAAAAyw/JaXR8AwDqs8EEAAAAAAo/dWkAAAAAvwEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                              "base64"
+                                          ],
+                                 "executable":  false,
+                                 "lamports":  5324400,
+                                 "owner":  "sEsYH97wqmfnkzHedjNcw3zyJdPvUmsa9AixhS4b4fN",
+                                 "rentEpoch":  18446744073709551615,
+                                 "space":  637
+                             }
+               },
+    "id":  1
+}

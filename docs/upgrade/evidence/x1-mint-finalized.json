@@ -1,0 +1,53 @@
+﻿{
+    "jsonrpc":  "2.0",
+    "result":  {
+                   "context":  {
+                                   "apiVersion":  "4.0.4",
+                                   "slot":  94119960
+                               },
+                   "value":  {
+                                 "data":  {
+                                              "parsed":  {
+                                                             "info":  {
+                                                                          "decimals":  9,
+                                                                          "extensions":  [
+                                                                                             {
+                                                                                                 "extension":  "metadataPointer",
+                                                                                                 "state":  {
+                                                                                                               "authority":  "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C",
+                                                                                                               "metadataAddress":  "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C"
+                                                                                                           }
+                                                                                             },
+                                                                                             {
+                                                                                                 "extension":  "tokenMetadata",
+                                                                                                 "state":  {
+                                                                                                               "additionalMetadata":  [
+
+                                                                                                                                      ],
+                                                                                                               "mint":  "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C",
+                                                                                                               "name":  "PUMP",
+                                                                                                               "symbol":  "PUMP",
+                                                                                                               "updateAuthority":  "Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C",
+                                                                                                               "uri":  "https://raw.githubusercontent.com/second2none-1/Pump/main/metadata.json"
+                                                                                                           }
+                                                                                             }
+                                                                                         ],
+                                                                          "freezeAuthority":  null,
+                                                                          "isInitialized":  true,
+                                                                          "mintAuthority":  null,
+                                                                          "supply":  "18444229684271747299"
+                                                                      },
+                                                             "type":  "mint"
+                                                         },
+                                              "program":  "spl-token-2022",
+                                              "space":  397
+                                          },
+                                 "executable":  false,
+                                 "lamports":  6310360,
+                                 "owner":  "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+                                 "rentEpoch":  18446744073709551615,
+                                 "space":  397
+                             }
+               },
+    "id":  1
+}
