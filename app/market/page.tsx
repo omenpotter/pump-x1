@@ -4,18 +4,24 @@ import PoolSample from "@/components/PoolSample";
 import ScrollFade from "@/components/ScrollFade";
 import TradeFeed from "@/components/TradeFeed";
 import { TOKEN } from "@/lib/constants";
+import JsonLd from "@/components/JsonLd";
+import { OG_IMAGE, pageGraph } from "@/lib/seo";
 
 const EXPLORER = TOKEN.explorerUrl;
 
 export const metadata: Metadata = {
-  title: "Market | PUMP X1",
-  description: "PUMP market quotes, verified pool swaps and X1 activity.",
+  title: "PUMP Price and Market Data on XDEX",
+  description: "PUMP/XNT spot quotes from XDEX and verified PUMP pool swaps on X1 Mainnet, read from the chain. Market data only — not financial advice.",
   alternates: { canonical: "/market/" },
+  openGraph: { title: "PUMP Price and Market Data on XDEX | Pump X1", description: "PUMP/XNT spot quotes from XDEX and verified PUMP pool swaps on X1 Mainnet, read from the chain. Market data only — not financial advice.", url: "/market/", images: [OG_IMAGE] },
 };
+
+const PAGE = { path: "/market/", name: "PUMP market data", description: "PUMP/XNT spot quotes from XDEX and verified PUMP pool swaps on X1 Mainnet, read from the chain. Market data only — not financial advice." };
 
 export default function MarketPage() {
   return (
     <div className="destination-page">
+    <JsonLd data={pageGraph(PAGE)} />
     <section className="site-section" id="market" style={{ position:"relative", zIndex:2, padding:"110px 5vw" }}>
       <div style={{ maxWidth:1380, margin:"0 auto" }}>
         <ScrollFade><div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".25em", color:"var(--blue)", textTransform:"uppercase", marginBottom:12, display:"flex", alignItems:"center", gap:10 }}><span style={{ color:"rgba(0,170,255,.3)", fontSize:".62rem" }}>{"//"}</span>Live Market</div></ScrollFade>

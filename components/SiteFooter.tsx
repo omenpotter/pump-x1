@@ -14,6 +14,11 @@ export default function SiteFooter() {
           <div className="blink-dot" />X1 MAINNET
         </div>
       </div>
+      <nav aria-label="X1 ecosystem" style={{ maxWidth:1380, margin:"22px auto 0", display:"flex", flexWrap:"wrap", gap:"6px 18px", justifyContent:"center", fontSize:".72rem", color:"var(--text-dim)" }}>
+        <span>An ARKBS Labs X1 ecosystem site</span>
+        <a href="https://x1space.xyz/TokenExplorer?mint=Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C" target="_blank" rel="noopener noreferrer" style={{ color:"var(--text-dim)" }}>Verify PUMP on X1 Space ↗</a>
+        <a href="https://x1nexus.xyz/" target="_blank" rel="noopener noreferrer" style={{ color:"var(--text-dim)" }}>X1 Nexus fair launches ↗</a>
+      </nav>
     </footer>
   );
 }

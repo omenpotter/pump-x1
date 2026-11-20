@@ -18,7 +18,23 @@ export default function OrbCanvas() {
     let cancelled = false;
     let dispose = () => {};
 
+    // Software WebGL (SwiftShader, llvmpipe, Microsoft Basic Render) emulates the GPU on the CPU, so a
+    // continuous render loop would monopolise the main thread. Keep the static logo on those devices.
+    function softwareRenderer(): boolean {
+      try {
+        const probe = document.createElement("canvas").getContext("webgl");
+        if (!probe) return true;
+        const info = probe.getExtension("WEBGL_debug_renderer_info");
+        const name = String(info ? probe.getParameter(info.UNMASKED_RENDERER_WEBGL) : probe.getParameter(probe.RENDERER));
+        probe.getExtension("WEBGL_lose_context")?.loseContext();
+        return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
+      } catch {
+        return true;
+      }
+    }
+
     async function start() {
+      if (softwareRenderer()) return;
       const image = new window.Image();
       image.src = imagePath;
       const [THREE, { RoomEnvironment }] = await Promise.all([
@@ -40,7 +56,10 @@ export default function OrbCanvas() {
       context.drawImage(image, atlas.width / 4 - artworkSize / 2,
         (atlas.height - artworkSize) / 2, artworkSize, artworkSize);
 
-      const renderer = new THREE.WebGLRenderer({ canvas: surface, alpha: true, antialias: true });
+      // failIfMajorPerformanceCaveat: on software-rendered WebGL (no GPU acceleration, e.g. blocklisted
+      // GPUs or SwiftShader) context creation throws and the static logo fallback stays visible,
+      // instead of a continuous render loop monopolising the main thread. GPU devices are unaffected.
+      const renderer = new THREE.WebGLRenderer({ canvas: surface, alpha: true, antialias: true, failIfMajorPerformanceCaveat: true });
       dispose = () => renderer.dispose();
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       renderer.toneMapping = THREE.ACESFilmicToneMapping;

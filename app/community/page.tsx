@@ -2,20 +2,26 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import ScrollFade from "@/components/ScrollFade";
 import { TOKEN } from "@/lib/constants";
+import JsonLd from "@/components/JsonLd";
+import { OG_IMAGE, pageGraph } from "@/lib/seo";
 
 const WEBSITE = "https://www.pumpx1.xyz/";
 const TELEGRAM = "https://t.me/+mYybY1doiaJiNjQ0";
 const EXPLORER = TOKEN.explorerUrl;
 
 export const metadata: Metadata = {
-  title: "Community | PUMP X1",
-  description: "Find the PUMP community and official links on X1 Mainnet.",
+  title: "PUMP Community and Official Links",
+  description: "Official PUMP links: the PUMP Telegram community, website and X1 explorer record for the PUMP Token-2022 mint on X1 Mainnet.",
   alternates: { canonical: "/community/" },
+  openGraph: { title: "PUMP Community and Official Links | Pump X1", description: "Official PUMP links: the PUMP Telegram community, website and X1 explorer record for the PUMP Token-2022 mint on X1 Mainnet.", url: "/community/", images: [OG_IMAGE] },
 };
+
+const PAGE = { path: "/community/", name: "PUMP community", description: "Official PUMP links: the PUMP Telegram community, website and X1 explorer record for the PUMP Token-2022 mint on X1 Mainnet." };
 
 export default function CommunityPage() {
   return (
     <div className="destination-page">
+    <JsonLd data={pageGraph(PAGE)} />
     <section className="site-section" id="community" style={{ position:"relative", zIndex:2, padding:"110px 5vw", textAlign:"center", background:"linear-gradient(135deg,rgba(5,13,22,.9) 0%,var(--bg) 100%)" }}>
       <div style={{ maxWidth:780, margin:"0 auto" }}>
         <ScrollFade>
