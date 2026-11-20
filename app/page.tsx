@@ -3,6 +3,10 @@ import HeroCanvas from "@/components/HeroCanvas";
 import LegacyHomeLink from "@/components/LegacyHomeLink";
 import OrbCanvas from "@/components/OrbCanvas";
 import { BUY_URL, TOKEN } from "@/lib/constants";
+import JsonLd from "@/components/JsonLd";
+import { pageGraph } from "@/lib/seo";
+
+const PAGE = { path: "/", name: "PUMP Token on X1 Mainnet", description: "PUMP is a Token-2022 community token on X1 Mainnet." };
 
 const destinations = [
   { href: "/market/", title: "Market", description: "Track XDEX quotes, verified pool swaps, and on-chain activity." },
@@ -13,6 +17,7 @@ const destinations = [
 export default function Home() {
   return (
     <>
+      <JsonLd data={pageGraph(PAGE)} />
       <LegacyHomeLink />
       <section className="site-hero flagship">
         <HeroCanvas />

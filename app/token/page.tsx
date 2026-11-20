@@ -4,19 +4,57 @@ import CopyBtn from "@/components/CopyBtn";
 import ScrollFade from "@/components/ScrollFade";
 import TkCanvas from "@/components/TokenomicsCanvas";
 import { TOKEN } from "@/lib/constants";
+import JsonLd from "@/components/JsonLd";
+import { OG_IMAGE, pageGraph } from "@/lib/seo";
 
 const CA = TOKEN.address;
 const EXPLORER = TOKEN.explorerUrl;
 
 export const metadata: Metadata = {
-  title: "Token | PUMP X1",
-  description: "The PUMP Token-2022 contract and tokenomics on X1 Mainnet.",
+  title: "PUMP Token Contract, Supply and Tokenomics",
+  description: "PUMP Token-2022 contract address on X1 Mainnet, 9 decimals, mint and freeze authority disabled, on-chain supply and tokenomics, with links to verify every fact.",
   alternates: { canonical: "/token/" },
+  openGraph: { title: "PUMP Token Contract, Supply and Tokenomics | Pump X1", description: "PUMP Token-2022 contract address on X1 Mainnet, 9 decimals, mint and freeze authority disabled, on-chain supply and tokenomics, with links to verify every fact.", url: "/token/", images: [OG_IMAGE] },
 };
+
+const FAQ: { q: string; a: string }[] = [
+  {
+    "q": "What is PUMP on X1?",
+    "a": "PUMP is a token on X1 Mainnet, an SVM (Solana Virtual Machine) compatible layer-1. It is issued with the Token-2022 program (SPL Token Extensions) and carries its name, symbol and metadata URI on-chain through the token-metadata extension."
+  },
+  {
+    "q": "What is the PUMP contract (mint) address?",
+    "a": "The PUMP mint address on X1 Mainnet is Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C. Always verify the full address before trading; tokens can copy names and logos but not mint addresses."
+  },
+  {
+    "q": "Can more PUMP be minted or can accounts be frozen?",
+    "a": "No. On X1 Mainnet the PUMP mint's mint authority and freeze authority are both null (disabled), so no new PUMP can be created and no holder account can be frozen by an authority."
+  },
+  {
+    "q": "What is PUMP's supply?",
+    "a": "The maximum amount was minted at launch (18,446,744,073.71 PUMP, the largest amount a 9-decimal token can represent). Because the mint authority is disabled, supply can never increase; it can decrease if tokens are burned. The current on-chain supply is read live from X1 RPC on the market page."
+  },
+  {
+    "q": "What is Token-2022?",
+    "a": "Token-2022, also called SPL Token Extensions, is the Solana-compatible token program that adds optional extensions to the original SPL Token program — for example on-chain metadata, transfer fees or transfer hooks. PUMP uses the metadata-pointer and token-metadata extensions."
+  },
+  {
+    "q": "How can I verify PUMP myself?",
+    "a": "Look up the mint address on an X1 explorer such as X1 Space or the X1 explorer, or call getAccountInfo on https://rpc.mainnet.x1.xyz with jsonParsed encoding. The account owner should be the Token-2022 program (TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb), decimals 9, and mintAuthority and freezeAuthority null."
+  }
+];
+
+const FAQ_LD = {
+  "@type": "FAQPage",
+  mainEntity: FAQ.map(({ q, a }) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+};
+
+const PAGE = { path: "/token/", name: "PUMP token contract and tokenomics", description: "PUMP Token-2022 contract address on X1 Mainnet, 9 decimals, mint and freeze authority disabled, on-chain supply and tokenomics, with links to verify every fact." };
 
 export default function TokenPage() {
   return (
     <div className="destination-page">
+    <JsonLd data={pageGraph({ ...PAGE, extra: [FAQ_LD] })} />
     <section className="site-section" id="token" style={{ position:"relative", zIndex:2, padding:"110px 5vw", background:"rgba(5,13,22,.6)" }}>
       <div style={{ maxWidth:1380, margin:"0 auto" }}>
         <ScrollFade><div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".25em", color:"var(--blue)", textTransform:"uppercase", marginBottom:12, display:"flex", alignItems:"center", gap:10 }}><span style={{ color:"rgba(0,170,255,.3)" }}>{"//"}</span>Token Info</div></ScrollFade>
@@ -104,6 +142,24 @@ export default function TokenPage() {
             ))}
           </div>
         </div>
+      </div>
+    </section>
+    <section id="faq" aria-labelledby="pump-faq-title" style={{ position:"relative", zIndex:2, padding:"90px 5vw", background:"rgba(5,13,22,.6)" }}>
+      <div style={{ maxWidth:900, margin:"0 auto" }}>
+        <div style={{ fontFamily:"var(--font-mono)", fontSize:".68rem", letterSpacing:".25em", color:"var(--blue)", textTransform:"uppercase", marginBottom:12 }}>{"// "}Verify on-chain</div>
+        <h2 id="pump-faq-title" style={{ fontFamily:"var(--font-bebas)", fontSize:"clamp(2.2rem,4.5vw,3.6rem)", color:"#fff", lineHeight:1, letterSpacing:".03em", marginBottom:28 }}>PUMP <span style={{ color:"var(--blue)" }}>FAQ</span></h2>
+        {FAQ.map(({ q, a }) => (
+          <details key={q} style={{ borderTop:"1px solid var(--border)", padding:"16px 0" }}>
+            <summary style={{ cursor:"pointer", fontWeight:700, color:"#fff", fontSize:"1rem" }}>{q}</summary>
+            <p style={{ color:"var(--text-dim)", lineHeight:1.8, marginTop:10, fontSize:".95rem" }}>{a}</p>
+          </details>
+        ))}
+        <p style={{ color:"var(--text-dim)", fontSize:".88rem", lineHeight:1.8, marginTop:24, borderTop:"1px solid var(--border)", paddingTop:18 }}>
+          Verify: <a href={`https://x1space.xyz/TokenExplorer?mint=${CA}`} target="_blank" rel="noopener noreferrer" style={{ color:"var(--blue)" }}>PUMP on X1 Space</a>
+          {" · "}<a href={EXPLORER} target="_blank" rel="noopener noreferrer" style={{ color:"var(--blue)" }}>X1 explorer</a>
+          {" · "}<a href="https://docs.x1.xyz/build-on-x1/resources" target="_blank" rel="noopener noreferrer" style={{ color:"var(--blue)" }}>X1 RPC endpoints</a>
+          {" · "}<a href="https://solana.com/docs/tokens/extensions" target="_blank" rel="noopener noreferrer" style={{ color:"var(--blue)" }}>Token-2022 extensions</a>
+        </p>
       </div>
     </section>
     </div>

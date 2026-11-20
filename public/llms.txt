@@ -1,0 +1,20 @@
+# Pump X1
+
+> Official site for PUMP, a Token-2022 (SPL Token Extensions) community token on X1 Mainnet, an SVM-compatible layer-1. Built by ARKBS Labs.
+
+Verified on X1 Mainnet (2026-11-20):
+- Mint address: Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C
+- Program: Token-2022 (TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb), extensions: metadataPointer, tokenMetadata
+- Decimals: 9; mint authority: null; freeze authority: null
+- Minted at launch: 18,446,744,073.71 PUMP; on-chain supply 18,444,229,684.27 at the recorded date (can only decrease)
+- Market data (XDEX quotes, pool swaps) is read live and is not financial advice.
+
+## Pages
+- [Home](https://www.pumpx1.xyz/): overview
+- [Token](https://www.pumpx1.xyz/token/): contract address, tokenomics, FAQ with verification steps
+- [Market](https://www.pumpx1.xyz/market/): XDEX quotes and verified pool activity
+- [Community](https://www.pumpx1.xyz/community/): official Telegram and links
+
+## Related
+- [PUMP on X1 Space](https://x1space.xyz/TokenExplorer?mint=Pumps1XfLYk4DttvL4ai9WsKtqPvoT5DE3AsijSzb2C): explorer record
+- [X1 documentation](https://docs.x1.xyz/)
